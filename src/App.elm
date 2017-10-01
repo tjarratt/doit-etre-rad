@@ -47,7 +47,7 @@ type TranslationActivity
 type alias Model =
     { currentActivity : Maybe TranslationActivity
     , wordToAdd : String
-    , frenchPhrasesToTranslate : List String
+    , frenchPhrases : List String
     }
 
 
@@ -61,7 +61,7 @@ type Msg
 -}
 defaultModel : Model
 defaultModel =
-    { currentActivity = Nothing, wordToAdd = "", frenchPhrasesToTranslate = [] }
+    { currentActivity = Nothing, wordToAdd = "", frenchPhrases = [] }
 
 
 {-| Returns the HTMl to be rendered based on the current application state
@@ -84,7 +84,7 @@ view model =
                 , Html.ul [ Html.Attributes.id "word-list" ] <|
                     List.map
                         (\phrase -> Html.li [] [ Html.text phrase ])
-                        model.frenchPhrasesToTranslate
+                        model.frenchPhrases
                 , Html.div [ Html.Attributes.id "add-word" ]
                     [ Html.input
                         [ Html.Attributes.placeholder "Add a French phrase"
@@ -116,7 +116,7 @@ update msg model =
         AddPhraseToPractice ->
             ( { model
                 | wordToAdd = ""
-                , frenchPhrasesToTranslate = [ model.wordToAdd ]
+                , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
               }
             , Cmd.none
             )

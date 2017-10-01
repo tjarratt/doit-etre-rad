@@ -2,11 +2,11 @@
 ===============
 
 GIVEN that I am a non-native french speaker
-WHEN I on the homepage of doit-etre-rad.cfapps.io
-THEN I should be able to select 'french phrase'
-
-AND when I type in a french word
-THEN I should see it added to my list of french phrase to practice
+WHEN I am practicing french phrases
+AND I type in a french word
+AND I refresh the page
+AND I continue practicing french phrases
+THEN I should still see it in my list of phrases
 
 -----
 

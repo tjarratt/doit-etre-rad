@@ -35,10 +35,17 @@ practiceFrenchPhrasesViewTests =
                     |> Event.input "une petite soucis"
                     |> Markup.target "#add-word button"
                     |> Event.click
-                    |> Markup.target "#word-list li:nth-child(1)"
+                    |> Markup.target "#add-word input"
+                    |> Event.input "pas de problème"
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Markup.target "#word-list li"
                     |> Markup.expect
-                        (element <| hasText "une petite soucis")
-        , test "entering a word clears the text input" <|
+                        (elements <|
+                            (atIndex 0 <| hasText "une petite soucis")
+                                <&&> (atIndex 1 <| hasText "pas de problème")
+                        )
+        , test "entering a word clears the text input and focuses the input" <|
             \() ->
                 Elmer.given App.defaultModel App.view App.update
                     |> Markup.target "#modes button:nth-child(1)"

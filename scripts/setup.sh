@@ -14,6 +14,7 @@ npm -i g npm
 npm install -g elm
 npm install -g elm-test
 npm install -g elm-format
+npm install -g elm-oracle
 npm install -g elm-github-install
 
 # install github-only-dependencies (e.g.: Elmer)

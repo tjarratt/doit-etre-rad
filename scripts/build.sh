@@ -3,4 +3,4 @@
 set -ex
 
 elm-format src tests --yes
-elm-make src/App.elm --yes
+elm-make src/App.elm --yes --output=index.js
