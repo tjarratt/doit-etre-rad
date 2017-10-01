@@ -17,10 +17,11 @@ npm install -g elm-format
 npm install -g elm-oracle
 npm install -g elm-github-install
 
-# install github-only-dependencies (e.g.: Elmer)
+# install elm github-only-dependencies (e.g.: Elmer)
 pushd tests
 elm install
 popd
 
 # install various packages
 elm package install
+

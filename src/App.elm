@@ -4,6 +4,7 @@ module App
         , defaultModel
         , view
         , update
+        , subscriptions
         )
 
 {-| This is an application to aide in practicing french and english.
@@ -29,11 +30,24 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 @docs update
 
+
+# subscribe to updates
+
+@docs subscriptions
+
 -}
 
+import Json.Decode as JD
+import Json.Encode as JE
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import List
+import Ports.LocalStorage as LocalStorage
+
+
+--- App supports multiple activities
+--- it is nice to know which the user is currently doing
 
 
 type TranslationActivity
@@ -55,6 +69,7 @@ type Msg
     = PracticeFrenchPhrases
     | TypePhraseUpdate String
     | AddPhraseToPractice
+    | ReceiveFromLocalStorage ( String, Maybe JD.Value )
 
 
 {-| Represents the initial state of the application
@@ -107,18 +122,38 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PracticeFrenchPhrases ->
-            ( { model | currentActivity = Just FrenchToEnglish }, Cmd.none )
-
         TypePhraseUpdate phrase ->
             ( { model | wordToAdd = phrase }, Cmd.none )
 
         AddPhraseToPractice ->
-            ( { model
-                | wordToAdd = ""
-                , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
-              }
-            , Cmd.none
+            let
+                updatedPhrases =
+                    List.append model.frenchPhrases [ model.wordToAdd ]
+            in
+                ( { model
+                    | wordToAdd = ""
+                    , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
+                  }
+                , LocalStorage.setItem
+                    ( "frenchPhrases"
+                    , JE.list <| List.map JE.string updatedPhrases
+                    )
+                )
+
+        ReceiveFromLocalStorage ( "frenchPhrases", Just value ) ->
+            case JD.decodeValue (JD.list JD.string) value of
+                Ok frenchPhrases ->
+                    ( { model | frenchPhrases = frenchPhrases }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ReceiveFromLocalStorage ( _, _ ) ->
+            ( model, Cmd.none )
+
+        PracticeFrenchPhrases ->
+            ( { model | currentActivity = Just FrenchToEnglish }
+            , LocalStorage.getItem "frenchPhrases"
             )
 
 
@@ -136,11 +171,8 @@ init =
     ( defaultModel, Cmd.none )
 
 
+{-| Subscribes to updates from the outside world (ooh, spooky!)
+-}
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch []
-
-
-frenchPhrases : List String
-frenchPhrases =
-    [ "anguille sous roche" ]
+    LocalStorage.getItemResponse ReceiveFromLocalStorage
