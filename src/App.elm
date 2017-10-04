@@ -37,6 +37,7 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 -}
 
+import Dom
 import Json.Decode as JD
 import Json.Encode as JE
 import Html exposing (Html)
@@ -44,6 +45,7 @@ import Html.Attributes
 import Html.Events
 import List
 import Ports.LocalStorage as LocalStorage
+import Task
 
 
 --- App supports multiple activities
@@ -66,7 +68,8 @@ type alias Model =
 
 
 type Msg
-    = PracticeFrenchPhrases
+    = Noop
+    | PracticeFrenchPhrases
     | TypePhraseUpdate String
     | AddPhraseToPractice
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
@@ -102,7 +105,8 @@ view model =
                         model.frenchPhrases
                 , Html.div [ Html.Attributes.id "add-word" ]
                     [ Html.input
-                        [ Html.Attributes.placeholder "Add a French phrase"
+                        [ Html.Attributes.id "add-word--input"
+                        , Html.Attributes.placeholder "Add a French phrase"
                         , Html.Events.onInput TypePhraseUpdate
                         , Html.Attributes.value model.wordToAdd
                         ]
@@ -147,21 +151,36 @@ update msg model =
             , LocalStorage.getItem "frenchPhrases"
             )
 
+        Noop ->
+            ( model, Cmd.none )
+
 
 updateFrenchPhrases : Model -> ( Model, Cmd Msg )
 updateFrenchPhrases model =
     let
         updatedPhrases =
             List.append model.frenchPhrases [ model.wordToAdd ]
+
+        -- refactor opportunity: extract this into a module
+        -- we gain better testability and don't need to worry about failure
+        -- and we can assert it was called with the right args :(
+        focusTask =
+            Task.onError (\_ -> Task.succeed ()) (Dom.focus "add-word--input")
+
+        focusInput =
+            Task.perform (\_ -> Noop) focusTask
+
+        saveInLocalStorage =
+            LocalStorage.setItem
+                ( "frenchPhrases"
+                , JE.list <| List.map JE.string updatedPhrases
+                )
     in
         ( { model
             | wordToAdd = ""
             , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
           }
-        , LocalStorage.setItem
-            ( "frenchPhrases"
-            , JE.list <| List.map JE.string updatedPhrases
-            )
+        , Cmd.batch [ focusInput, saveInLocalStorage ]
         )
 
 

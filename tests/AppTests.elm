@@ -7,10 +7,12 @@ import Elmer.Html as Markup
 import Elmer.Html.Event as Event
 import Elmer.Html.Matchers exposing (element, elements, hasText, hasAttribute, hasProperty)
 import Elmer.Platform.Subscription as Subscription
+import Elmer.Platform.Command as Command
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg, anyArg)
 import Json.Decode as JD
 import Json.Encode as JE
+import Task
 import App
 import Ports.LocalStorage as LocalStorage
 
@@ -33,7 +35,7 @@ practiceFrenchPhrasesViewTests =
         [ test "it has a textfield to add a phrase to the list" <|
             \() ->
                 Elmer.given App.defaultModel App.view App.update
-                    |> Spy.use [ setItemSpy, getItemSpy ]
+                    |> Spy.use [ setItemSpy, getItemSpy, fakeFocusTaskSpy ]
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
@@ -54,7 +56,7 @@ practiceFrenchPhrasesViewTests =
         , test "entering a word clears the text input and focuses the input" <|
             \() ->
                 Elmer.given App.defaultModel App.view App.update
-                    |> Spy.use [ setItemSpy, getItemSpy ]
+                    |> Spy.use [ setItemSpy, getItemSpy, fakeFocusTaskSpy ]
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
@@ -79,7 +81,7 @@ practiceFrenchPhrasesViewTests =
         , test "entering a word saves it to local storage" <|
             \() ->
                 Elmer.given App.defaultModel App.view App.update
-                    |> Spy.use [ getItemSpy, setItemSpy ]
+                    |> Spy.use [ getItemSpy, setItemSpy, fakeFocusTaskSpy ]
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#add-word input"
@@ -87,6 +89,18 @@ practiceFrenchPhrasesViewTests =
                     |> Markup.target "#add-word button"
                     |> Event.click
                     |> Spy.expect "setItem" (wasCalled 1)
+        , test "it applies focus to the text input after a word is added" <|
+            \() ->
+                Elmer.given App.defaultModel App.view App.update
+                    |> Spy.use [ getItemSpy, setItemSpy, fakeFocusTaskSpy ]
+                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Event.click
+                    |> Markup.target "#add-word input"
+                    |> Event.input "c'est simple"
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Spy.expect "taskFocus"
+                        (wasCalled 1)
         ]
 
 
@@ -155,3 +169,14 @@ mockedGetItemResponse =
                 , "that's what the showman said"
                 ]
     )
+
+
+fakeFocusTaskPerform : () -> (() -> msg) -> Task.Task Never () -> Cmd msg
+fakeFocusTaskPerform input tagger _ =
+    Command.fake (tagger input)
+
+
+fakeFocusTaskSpy : Spy
+fakeFocusTaskSpy =
+    Spy.create "taskFocus" (\_ -> Task.perform)
+        |> andCallFake (fakeFocusTaskPerform ())
