@@ -1,0 +1,39 @@
+{
+	"ImportPath": "github.com/tjarratt/doit-etre-rad/backend",
+	"GoVersion": "go1.8",
+	"Deps": [
+		{
+			"ImportPath": "github.com/cloudfoundry-community/go-cfenv",
+			"Comment": "v1.17.0",
+			"Rev": "f920e9562d5f951cbf11785728f67258c38a10d0"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.3-36-ga8b7ed4",
+			"Rev": "a8b7ed4454a6a4f98f85d3ad558cd6d97cec6959"
+		},
+		{
+			"ImportPath": "github.com/google/uuid",
+			"Comment": "0.2-11-g7e072fc",
+			"Rev": "7e072fc3a7be179aee6d3359e46015aa8c995314"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1",
+			"Rev": "0eeaf8392f5b04950925b8a69fe70f110fa7cbfc"
+		},
+		{
+			"ImportPath": "github.com/mattes/migrate",
+			"Comment": "v3.0.1-83-gbe1b075",
+			"Rev": "be1b0756056732ed8315516099ed1f3179a15b3a"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "d0303fe809921458f417bcf828397a65db30a7e4"
+		}
+	]
+}

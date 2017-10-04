@@ -1,0 +1,5 @@
+---
+applications:
+  - name: doit-etre-rad-backend
+    buildpack: binary_buildpack
+    path: tmp

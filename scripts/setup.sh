@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+set -ex
+
 # setup.sh
 # This script can be run to ensure new machines can build and run
 # this project without much additional setup.
 # Make sure you already have npm installed, otherwise you'll be sad.
 # (purposefully exclused this step since installation of npm can be done
 # differently depending on host OS - whether it's OS X, unix or Windows)
+
+cd $(dirname $0)/../frontend
 
 # ensure npm is up-to-date
 npm -i g npm
