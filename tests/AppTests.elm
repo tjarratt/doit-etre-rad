@@ -2,7 +2,7 @@ module AppTests exposing (..)
 
 import Test exposing (..)
 import Expect
-import Elmer exposing (atIndex, (<&&>))
+import Elmer exposing (atIndex, hasLength, (<&&>))
 import Elmer.Html as Markup
 import Elmer.Html.Event as Event
 import Elmer.Html.Matchers exposing (element, elements, hasText, hasAttribute, hasProperty)
@@ -23,9 +23,7 @@ initialViewTests =
                 Elmer.given App.defaultModel App.view App.update
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Markup.expect
-                        (elements <|
-                            (atIndex 0 <| hasText "French Phrases")
-                        )
+                        (element <| hasText "French Phrases")
         ]
 
 
@@ -67,6 +65,17 @@ practiceFrenchPhrasesViewTests =
                     |> Markup.target "#add-word input"
                     |> Markup.expect
                         (element <| hasProperty ( "value", "" ))
+        , test "adding a blank word is not valid input" <|
+            \() ->
+                Elmer.given App.defaultModel App.view App.update
+                    |> Spy.use [ getItemSpy ]
+                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Event.click
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Markup.target "#word-list li"
+                    |> Markup.expect
+                        (elements <| hasLength 0)
         , test "entering a word saves it to local storage" <|
             \() ->
                 Elmer.given App.defaultModel App.view App.update

@@ -126,19 +126,10 @@ update msg model =
             ( { model | wordToAdd = phrase }, Cmd.none )
 
         AddPhraseToPractice ->
-            let
-                updatedPhrases =
-                    List.append model.frenchPhrases [ model.wordToAdd ]
-            in
-                ( { model
-                    | wordToAdd = ""
-                    , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
-                  }
-                , LocalStorage.setItem
-                    ( "frenchPhrases"
-                    , JE.list <| List.map JE.string updatedPhrases
-                    )
-                )
+            if String.length model.wordToAdd == 0 then
+                ( model, Cmd.none )
+            else
+                updateFrenchPhrases model
 
         ReceiveFromLocalStorage ( "frenchPhrases", Just value ) ->
             case JD.decodeValue (JD.list JD.string) value of
@@ -155,6 +146,23 @@ update msg model =
             ( { model | currentActivity = Just FrenchToEnglish }
             , LocalStorage.getItem "frenchPhrases"
             )
+
+
+updateFrenchPhrases : Model -> ( Model, Cmd Msg )
+updateFrenchPhrases model =
+    let
+        updatedPhrases =
+            List.append model.frenchPhrases [ model.wordToAdd ]
+    in
+        ( { model
+            | wordToAdd = ""
+            , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
+          }
+        , LocalStorage.setItem
+            ( "frenchPhrases"
+            , JE.list <| List.map JE.string updatedPhrases
+            )
+        )
 
 
 main =
