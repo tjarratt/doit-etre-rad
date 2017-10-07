@@ -3,3 +3,5 @@ applications:
   - name: doit-etre-rad-backend
     buildpack: binary_buildpack
     path: tmp
+    routes:
+      - route: doit-etre-rad.cfapps.io/api

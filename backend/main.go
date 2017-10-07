@@ -31,13 +31,15 @@ func main() {
 		),
 		httpserver.NewShowFrenchPhrasesParamReader(),
 	)
-	router.Handle("/phrases/french", showHandler).Methods("GET")
+	router.Handle("/api/phrases/french", showHandler).Methods("GET")
 
 	writeHandler := httpserver.NewAddFrenchPhraseHandler(
 		usecases.NewAddFrenchPhraseUseCase(repository),
 		httpserver.NewAddFrenchPhraseParamReader(),
 	)
-	router.Handle("/phrases/french", writeHandler).Methods("POST")
+	router.Handle("/api/phrases/french", writeHandler).Methods("POST")
+
+	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
 	port := app.Port
 	fmt.Fprintln(os.Stdout, "listening on port ", port)
@@ -46,4 +48,10 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func NotFoundHandler(rw http.ResponseWriter, req *http.Request) {
+	path := req.RequestURI
+	rw.WriteHeader(http.StatusBadRequest)
+	rw.Write([]byte(fmt.Sprintf("You done goofed son : '%s'", path)))
 }
