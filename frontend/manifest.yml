@@ -1,0 +1,9 @@
+---
+applications:
+  - name: doit-etre-rad-frontend
+    buildpack: staticfile_buildpack
+    path: tmp
+    routes:
+      - route: doit-etre-rad.cfapps.io
+    env:
+      FORCE_HTTPS: true

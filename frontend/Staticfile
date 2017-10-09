@@ -1,0 +1,2 @@
+root: app
+location_include: includes/*.conf
