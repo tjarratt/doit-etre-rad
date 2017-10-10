@@ -7,3 +7,5 @@ Things I believe about Elmer
 * type-arity of spies is REALLY important, but has bad error messages
   - too many ? it silently doesn't call your spy
   - too few ? it blows up during test execution
+* elmer http
+  - seems you can't add two spies with the same URL, differing verbs

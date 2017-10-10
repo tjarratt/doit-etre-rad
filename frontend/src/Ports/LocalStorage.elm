@@ -8,6 +8,11 @@ port module Ports.LocalStorage exposing (..)
 @docs setItem
 
 
+# setItemResponse
+
+@docs setItemResponse
+
+
 # getItem
 
 @docs getItem
@@ -16,6 +21,21 @@ port module Ports.LocalStorage exposing (..)
 # callback for getItem
 
 @docs getItemResponse
+
+
+# set user uuid
+
+@docs setUserUuid
+
+
+# get user uuid
+
+@docs getUserUuid
+
+
+# callback for getUserUuid
+
+@docs getUserUuidResponse
 
 -}
 
@@ -30,6 +50,13 @@ port setItem : ( String, JD.Value ) -> Cmd msg
 
 
 
+-- port for acknowledging that we saved a json-encoded value in local storage
+
+
+port setItemResponse : (JD.Value -> msg) -> Sub msg
+
+
+
 -- port for retrieving previously-saved json encoded values in local storage
 
 
@@ -41,3 +68,24 @@ port getItem : String -> Cmd msg
 
 
 port getItemResponse : (( String, Maybe JE.Value ) -> msg) -> Sub msg
+
+
+
+-- port for setting user's uuid
+
+
+port setUserUuid : String -> Cmd msg
+
+
+
+-- port for getting user's uuid
+
+
+port getUserUuid : String -> Cmd msg
+
+
+
+-- port subscribe part of getUserUuid
+
+
+port getUserUuidResponse : (Maybe String -> msg) -> Sub msg

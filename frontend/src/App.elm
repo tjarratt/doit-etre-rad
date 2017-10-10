@@ -43,9 +43,13 @@ import Json.Encode as JE
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Http
 import List
 import Ports.LocalStorage as LocalStorage
+import Random.Pcg exposing (Seed, initialSeed)
 import Task
+import Uuid
+import UuidGenerator
 
 
 --- App supports multiple activities
@@ -58,12 +62,9 @@ type TranslationActivity
     | DifferentiateFrenchWords
 
 
-{-| Represents the current state of the application
--}
-type alias Model =
-    { currentActivity : Maybe TranslationActivity
-    , wordToAdd : String
-    , frenchPhrases : List String
+type alias Phrase =
+    { uuid : Maybe String
+    , content : String
     }
 
 
@@ -73,13 +74,33 @@ type Msg
     | TypePhraseUpdate String
     | AddPhraseToPractice
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
+    | DidSaveToLocalStorage JD.Value
+    | ReceiveUserUuid (Maybe String)
+    | ReceivePhrasesFromBackend (Result Http.Error (List Phrase))
+    | ReceivePhraseFromBackend (Result Http.Error Phrase)
+
+
+{-| Represents the current state of the application
+-}
+type alias Model =
+    { userUuid : Maybe Uuid.Uuid
+    , currentSeed : Seed
+    , currentActivity : Maybe TranslationActivity
+    , wordToAdd : String
+    , frenchPhrases : List String
+    }
 
 
 {-| Represents the initial state of the application
 -}
-defaultModel : Model
-defaultModel =
-    { currentActivity = Nothing, wordToAdd = "", frenchPhrases = [] }
+defaultModel : Int -> Model
+defaultModel seed =
+    { userUuid = Nothing
+    , currentSeed = initialSeed seed
+    , currentActivity = Nothing
+    , wordToAdd = ""
+    , frenchPhrases = []
+    }
 
 
 {-| Returns the HTMl to be rendered based on the current application state
@@ -146,13 +167,116 @@ update msg model =
         ReceiveFromLocalStorage ( _, _ ) ->
             ( model, Cmd.none )
 
+        DidSaveToLocalStorage jsonValue ->
+            ( model, sendPhraseToBackend model.userUuid jsonValue )
+
+        ReceiveUserUuid (Just uuidString) ->
+            let
+                uuid =
+                    Uuid.fromString uuidString
+            in
+                ( { model | userUuid = uuid }
+                , getPhrasesFromBackend uuid
+                )
+
+        ReceiveUserUuid Nothing ->
+            let
+                ( uuid, nextSeed ) =
+                    UuidGenerator.next model.currentSeed
+            in
+                ( { model
+                    | userUuid = Just uuid
+                    , currentSeed = nextSeed
+                  }
+                , LocalStorage.setUserUuid <| Uuid.toString uuid
+                )
+
         PracticeFrenchPhrases ->
             ( { model | currentActivity = Just FrenchToEnglish }
-            , LocalStorage.getItem "frenchPhrases"
+            , Cmd.batch [ LocalStorage.getUserUuid "", LocalStorage.getItem "frenchPhrases" ]
             )
+
+        ReceivePhraseFromBackend _ ->
+            ( model, Cmd.none )
+
+        ReceivePhrasesFromBackend _ ->
+            ( model, Cmd.none )
 
         Noop ->
             ( model, Cmd.none )
+
+
+getPhrasesFromBackend : Maybe Uuid.Uuid -> Cmd Msg
+getPhrasesFromBackend maybeUuid =
+    case maybeUuid of
+        Nothing ->
+            Cmd.none
+
+        Just userUuid ->
+            let
+                uuidStr =
+                    Uuid.toString userUuid
+
+                url =
+                    "/api/phrases/french"
+
+                headers =
+                    [ Http.header "X-User-Token" uuidStr ]
+
+                expect =
+                    Http.expectJson <| JD.list phraseDecoder
+
+                config =
+                    { method = "GET"
+                    , headers = headers
+                    , url = url
+                    , body = Http.emptyBody
+                    , expect = expect
+                    , timeout = Nothing
+                    , withCredentials = False
+                    }
+
+                request =
+                    Http.request config
+            in
+                Http.send ReceivePhrasesFromBackend request
+
+
+sendPhraseToBackend : Maybe Uuid.Uuid -> JE.Value -> Cmd Msg
+sendPhraseToBackend uuid phrase =
+    case uuid of
+        Nothing ->
+            (Cmd.none)
+
+        Just uuid ->
+            let
+                uuidStr =
+                    Uuid.toString uuid
+
+                jsonValue =
+                    JE.object [ ( "content", phrase ) ]
+
+                config =
+                    { method = "POST"
+                    , headers = [ Http.header "X-User-Token" uuidStr ]
+                    , url = "/api/phrases/french"
+                    , body = Http.jsonBody jsonValue
+                    , expect = Http.expectJson phraseDecoder
+                    , timeout = Nothing
+                    , withCredentials = False
+                    }
+
+                request =
+                    Http.request config
+            in
+                Http.send ReceivePhraseFromBackend request
+
+
+phraseDecoder : JD.Decoder Phrase
+phraseDecoder =
+    JD.map2 Phrase
+        (JD.field "content" (JD.nullable JD.string))
+        (JD.field "uuid" JD.string)
 
 
 updateFrenchPhrases : Model -> ( Model, Cmd Msg )
@@ -185,7 +309,7 @@ updateFrenchPhrases model =
 
 
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , update = update
         , view = view
@@ -193,13 +317,21 @@ main =
         }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( defaultModel, Cmd.none )
+type alias Flags =
+    { seed : Int }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( defaultModel flags.seed, Cmd.none )
 
 
 {-| Subscribes to updates from the outside world (ooh, spooky!)
 -}
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    LocalStorage.getItemResponse ReceiveFromLocalStorage
+    Sub.batch
+        [ LocalStorage.getItemResponse ReceiveFromLocalStorage
+        , LocalStorage.setItemResponse DidSaveToLocalStorage
+        , LocalStorage.getUserUuidResponse ReceiveUserUuid
+        ]
