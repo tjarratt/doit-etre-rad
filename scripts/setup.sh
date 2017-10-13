@@ -29,3 +29,9 @@ popd
 # install various packages
 elm package install
 
+# start installing backend items
+brew install go
+
+pushd backend
+go get -u ./... 
+popd
