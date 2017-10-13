@@ -49,13 +49,13 @@ func (paramReader addFrenchPhraseParamReader) ReadParamsFromRequest(
 		return AddFrenchPhraseParams{}, err
 	}
 
-	phrase, ok := requestObj["phrase"]
+	content, ok := requestObj["content"]
 	if !ok {
 		return AddFrenchPhraseParams{}, errors.New(`{"err": "Could not read phrase from request body"}`)
 	}
 
 	return AddFrenchPhraseParams{
-		Phrase:   phrase,
+		Phrase:   content,
 		UserUUID: userUuid,
 	}, nil
 }
