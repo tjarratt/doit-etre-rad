@@ -6,9 +6,10 @@
   app.ports.setItem.subscribe(function(arguments) {
     var key = arguments[0];
     var encodedValue = JSON.stringify(arguments[1]);
+    var latestValue = arguments[2];
 
     window.localStorage.setItem(key, encodedValue);
-    app.ports.setItemResponse.send(arguments[1]);
+    app.ports.setItemResponse.send(latestValue);
   });
   app.ports.getItem.subscribe(function(key) {
     var result = window.localStorage.getItem(key) || "[]";

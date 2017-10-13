@@ -46,7 +46,7 @@ import Json.Encode as JE
 -- port for saving a json-encoded value with a key in local storage
 
 
-port setItem : ( String, JD.Value ) -> Cmd msg
+port setItem : ( String, JD.Value, String ) -> Cmd msg
 
 
 

@@ -15,7 +15,7 @@ import Elmer.Http.Stub
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Platform.Command as Command
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
-import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg, anyArg)
+import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
 import Json.Decode as JD
 import Json.Encode as JE
 import Task

@@ -298,6 +298,7 @@ updateFrenchPhrases model =
             LocalStorage.setItem
                 ( "frenchPhrases"
                 , JE.list <| List.map JE.string updatedPhrases
+                , model.wordToAdd
                 )
     in
         ( { model
