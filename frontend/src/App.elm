@@ -112,7 +112,10 @@ view model =
             Html.div []
                 [ Html.h1 [] [ Html.text "I want to practice" ]
                 , Html.div [ Html.Attributes.id "modes" ]
-                    [ Html.button [ Html.Events.onClick PracticeFrenchPhrases ]
+                    [ Html.button
+                        [ Html.Events.onClick PracticeFrenchPhrases
+                        , Html.Attributes.class "btn btn-default"
+                        ]
                         [ Html.text "French Phrases" ]
                     ]
                 ]
@@ -125,16 +128,22 @@ view model =
                         (\phrase -> Html.li [] [ Html.text phrase ])
                         model.frenchPhrases
                 , Html.div [ Html.Attributes.id "add-word" ]
-                    [ Html.input
+                    [ Html.label
+                        [ Html.Attributes.for "add-word--input" ]
+                        [ Html.text "Add a french phrase" ]
+                    , Html.input
                         [ Html.Attributes.id "add-word--input"
-                        , Html.Attributes.placeholder "Add a French phrase"
+                        , Html.Attributes.placeholder "à tout de suite"
+                        , Html.Attributes.class "form-control"
                         , Html.Events.onInput TypePhraseUpdate
                         , Html.Attributes.value model.wordToAdd
                         ]
                         []
                     , Html.button
-                        [ Html.Events.onClick AddPhraseToPractice ]
-                        [ Html.text "Submit" ]
+                        [ Html.Events.onClick AddPhraseToPractice
+                        , Html.Attributes.class "btn btn-default"
+                        ]
+                        [ Html.text "Save" ]
                     ]
                 ]
 
