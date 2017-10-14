@@ -144,6 +144,25 @@ renderingFromlocalStorageTests =
         ]
 
 
+renderingFromBackendTests : Test
+renderingFromBackendTests =
+    describe "when the backend returns some phrases"
+        [ test "it renders the phrases" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Event.click
+                    |> Markup.target "#word-list li"
+                    |> Markup.expect
+                        (element <|
+                            hasText "bonjour"
+                        )
+        ]
+
+
 userUuidTests : Test
 userUuidTests =
     describe "the user's uuid"

@@ -199,6 +199,13 @@ update msg model =
         ReceivePhraseFromBackend _ ->
             ( model, Cmd.none )
 
+        ReceivePhrasesFromBackend (Ok response) ->
+            let
+                phrases =
+                    List.map (\phrase -> phrase.content) response
+            in
+                ( { model | frenchPhrases = phrases }, Cmd.none )
+
         ReceivePhrasesFromBackend _ ->
             ( model, Cmd.none )
 
@@ -275,8 +282,8 @@ sendPhraseToBackend uuid phrase =
 phraseDecoder : JD.Decoder Phrase
 phraseDecoder =
     JD.map2 Phrase
-        (JD.field "content" (JD.nullable JD.string))
-        (JD.field "uuid" JD.string)
+        (JD.field "uuid" (JD.nullable JD.string))
+        (JD.field "content" JD.string)
 
 
 updateFrenchPhrases : Model -> ( Model, Cmd Msg )
