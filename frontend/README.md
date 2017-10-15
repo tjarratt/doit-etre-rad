@@ -19,6 +19,8 @@ Icebox
 * two-sided cards ?
 * remove dupes
 * shake on validation error
+* show user when they are offline
+* manual re-sync when there are changes to sync
 
 -----
 

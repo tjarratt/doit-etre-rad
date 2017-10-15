@@ -7,8 +7,8 @@ cd $(dirname $0)/..
 rm -rf tmp/*
 
 # put migrations into place
-mkdir tmp/migrations
-cp db/migrations/*.sql tmp/migrations
+mkdir -p tmp/db/migrations
+cp db/migrations/*.sql tmp/db/migrations
 
 # build our application
 go build main.go

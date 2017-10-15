@@ -54,7 +54,7 @@ func runMigrations(db *sql.DB) {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file://db/migrations",
 		"mysql",
 		driver,
 	)

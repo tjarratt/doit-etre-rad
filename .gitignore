@@ -8,3 +8,5 @@ repl-temp-*
 index.js
 tmp
 
+# local development logs
+logs
