@@ -2,11 +2,22 @@
 ===============
 
 GIVEN that I am a non-native french speaker
-WHEN I am on the homepage of doit-etre-rad.cfapps.io
+WHEN I do not have an internet connection
 AND I am practicing french phrases
 AND I enter a phrase
-AND I strike the enter key
-THEN I should see the input added to my list of phrases to practice
+THEN I should see an indication that it has not been saved
+
+WHEN I do have an internet connection again
+AND I tap the "manual sync" button
+THEN I should see the unsaved indicator go away
+AND if I refresh the page
+THEN I should see all of my phrases
+
+-----
+
+Given that I am a non-native french speaker
+When I enter some french phrases to practice
+Then I should be able to add translations as well
 
 -----
 
