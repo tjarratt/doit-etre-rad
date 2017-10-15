@@ -19,4 +19,4 @@ sed -i '' "s/index.js/index-${timestamp}.js/" tmp/app/index.html
 sed -i '' "s/elm-init.js/elm-init-${timestamp}.js/" tmp/app/index.html
 sed -i '' "s/VERSION/${timestamp}/" tmp/app/assets/application.appcache
 
-#cf push
+cf push
