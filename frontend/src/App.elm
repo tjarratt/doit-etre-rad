@@ -127,23 +127,25 @@ view model =
                     List.map
                         (\phrase -> Html.li [] [ Html.text phrase ])
                         model.frenchPhrases
-                , Html.div [ Html.Attributes.id "add-word" ]
-                    [ Html.label
-                        [ Html.Attributes.for "add-word--input" ]
-                        [ Html.text "Add a french phrase" ]
-                    , Html.input
-                        [ Html.Attributes.id "add-word--input"
-                        , Html.Attributes.placeholder "à tout de suite"
-                        , Html.Attributes.class "form-control"
-                        , Html.Events.onInput TypePhraseUpdate
-                        , Html.Attributes.value model.wordToAdd
+                , Html.form [ Html.Attributes.action "javascript:void(0)" ]
+                    [ Html.div [ Html.Attributes.id "add-word" ]
+                        [ Html.label
+                            [ Html.Attributes.for "add-word--input" ]
+                            [ Html.text "Add a french phrase" ]
+                        , Html.input
+                            [ Html.Attributes.id "add-word--input"
+                            , Html.Attributes.placeholder "à tout de suite"
+                            , Html.Attributes.class "form-control"
+                            , Html.Events.onInput TypePhraseUpdate
+                            , Html.Attributes.value model.wordToAdd
+                            ]
+                            []
+                        , Html.button
+                            [ Html.Events.onClick AddPhraseToPractice
+                            , Html.Attributes.class "btn btn-default"
+                            ]
+                            [ Html.text "Save" ]
                         ]
-                        []
-                    , Html.button
-                        [ Html.Events.onClick AddPhraseToPractice
-                        , Html.Attributes.class "btn btn-default"
-                        ]
-                        [ Html.text "Save" ]
                     ]
                 ]
 
