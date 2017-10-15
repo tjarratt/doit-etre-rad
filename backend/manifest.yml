@@ -5,3 +5,4 @@ applications:
     path: tmp
     routes:
       - route: doit-etre-rad.cfapps.io/api
+      - route: pratique-francais.cfapps.io/api
