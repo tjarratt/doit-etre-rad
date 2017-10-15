@@ -1,19 +1,6 @@
 ## User Stories
 ===============
 
-GIVEN that I am using a mobile phone
-WHEN I am on the homepage of doit-etre-rad.cfapps.io
-THEN I should see a mobile optimized version of the site
-
------
-
-GIVEN that I am a non-native french speaker
-WHEN I have previously visited doit-etre-rad.cfapps.io
-AND there has been a new version deployed
-THEN I should not need to force-reload in order to get the new experience
-
------
-
 GIVEN that I am a non-native french speaker
 WHEN I am on the homepage of doit-etre-rad.cfapps.io
 AND I am practicing french phrases
