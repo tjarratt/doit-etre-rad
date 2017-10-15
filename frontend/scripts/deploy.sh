@@ -19,4 +19,7 @@ sed -i '' "s/index.js/index-${timestamp}.js/" tmp/app/index.html
 sed -i '' "s/elm-init.js/elm-init-${timestamp}.js/" tmp/app/index.html
 sed -i '' "s/VERSION/${timestamp}/" tmp/app/assets/application.appcache
 
+cp assets/drapeau_francais_retina.png tmp/app/assets
+cp assets/drapeau_francais_favicon.ico tmp/app/favicon.ico
+
 cf push

@@ -1,3 +1,9 @@
 CACHE MANIFEST
 index-VERSION.js
 elm-init-VERSION.js
+
+CACHE:
+//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css
+
+NETWORK:
+/api
