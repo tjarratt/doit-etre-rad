@@ -18,6 +18,7 @@ import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
 import Json.Decode as JD
 import Json.Encode as JE
+import Phrases exposing (..)
 import Task
 import Random.Pcg exposing (Seed, initialSeed)
 import Uuid exposing (uuidGenerator)
@@ -111,10 +112,10 @@ practiceFrenchPhrasesViewTests =
         ]
 
 
-renderingFromlocalStorageTests : Test
-renderingFromlocalStorageTests =
-    describe "when there are saved french phrases in local storage..."
-        [ test "it asks for the french phrases it previously saved" <|
+renderingPhrasesTests : Test
+renderingPhrasesTests =
+    describe "when there are phrases in local storage and the backend..."
+        [ test "it initially asks for the french phrases it previously saved" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use [ getUserUuidSpy, getItemSpy ]
@@ -124,7 +125,7 @@ renderingFromlocalStorageTests =
                         (wasCalledWith
                             [ stringArg "frenchPhrases" ]
                         )
-        , test "it renders the phrases" <|
+        , test "it renders the phrases from local storage" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use [ getUserUuidSpy, getItemSpy, getItemResponseSpy ]
@@ -141,24 +142,24 @@ renderingFromlocalStorageTests =
                                 <&&> (atIndex 3 <| hasText "give them a twist a flick of the wrist")
                                 <&&> (atIndex 4 <| hasText "that's what the showman said")
                         )
-        ]
-
-
-renderingFromBackendTests : Test
-renderingFromBackendTests =
-    describe "when the backend returns some phrases"
-        [ test "it renders the phrases" <|
+        , test "it renders the localstorage and backend phrases" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> Subscription.send "itemResponseEffect" mockedGetItemResponse
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#word-list li"
                     |> Markup.expect
-                        (element <|
-                            hasText "bonjour"
+                        (elements <|
+                            (atIndex 0 <| hasText "bonjour")
+                                <&&> (atIndex 1 <| hasText "i've got a lovely bunch of coconuts")
+                                <&&> (atIndex 2 <| hasText "there they are all standing in a row")
+                                <&&> (atIndex 3 <| hasText "big ones, small ones, some as big as your head")
+                                <&&> (atIndex 4 <| hasText "give them a twist a flick of the wrist")
+                                <&&> (atIndex 5 <| hasText "that's what the showman said")
                         )
         ]
 

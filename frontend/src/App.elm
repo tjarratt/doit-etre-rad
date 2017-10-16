@@ -48,6 +48,7 @@ import List
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
+import Phrases exposing (..)
 import Uuid
 import UuidGenerator
 
@@ -62,12 +63,6 @@ type TranslationActivity
     | DifferentiateFrenchWords
 
 
-type alias Phrase =
-    { uuid : Maybe String
-    , content : String
-    }
-
-
 type Msg
     = Noop
     | PracticeFrenchPhrases
@@ -76,8 +71,8 @@ type Msg
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
     | ReceiveUserUuid (Maybe String)
-    | ReceivePhrasesFromBackend (Result Http.Error (List Phrase))
-    | ReceivePhraseFromBackend (Result Http.Error Phrase)
+    | ReceivePhrasesFromBackend (Result Http.Error (List SavedPhrase))
+    | ReceivePhraseFromBackend (Result Http.Error SavedPhrase)
 
 
 {-| Represents the current state of the application
@@ -87,7 +82,8 @@ type alias Model =
     , currentSeed : Seed
     , currentActivity : Maybe TranslationActivity
     , wordToAdd : String
-    , frenchPhrases : List String
+    , frenchPhrases : List Phrase
+    , errors : Int
     }
 
 
@@ -100,6 +96,7 @@ defaultModel seed =
     , currentActivity = Nothing
     , wordToAdd = ""
     , frenchPhrases = []
+    , errors = 0
     }
 
 
@@ -125,8 +122,11 @@ view model =
                 [ Html.h1 [] [ Html.text "Practicing French phrases" ]
                 , Html.ul [ Html.Attributes.id "word-list" ] <|
                     List.map
-                        (\phrase -> Html.li [] [ Html.text phrase ])
-                        model.frenchPhrases
+                        (\content -> Html.li [] [ Html.text content ])
+                        (List.map
+                            (\phrase -> phraseToString phrase)
+                            model.frenchPhrases
+                        )
                 , Html.form [ Html.Attributes.action "javascript:void(0)" ]
                     [ Html.div [ Html.Attributes.id "add-word" ]
                         [ Html.label
@@ -169,8 +169,19 @@ update msg model =
 
         ReceiveFromLocalStorage ( "frenchPhrases", Just value ) ->
             case JD.decodeValue (JD.list JD.string) value of
-                Ok frenchPhrases ->
-                    ( { model | frenchPhrases = frenchPhrases }, Cmd.none )
+                Ok values ->
+                    let
+                        unsavedPhrases =
+                            List.map (\v -> Unsaved v) values
+
+                        updatedPhrases =
+                            merge model.frenchPhrases unsavedPhrases
+                    in
+                        ( { model
+                            | frenchPhrases = updatedPhrases
+                          }
+                        , Cmd.none
+                        )
 
                 _ ->
                     ( model, Cmd.none )
@@ -212,10 +223,14 @@ update msg model =
 
         ReceivePhrasesFromBackend (Ok response) ->
             let
-                phrases =
-                    List.map (\phrase -> phrase.content) response
+                savedPhrases =
+                    List.map (\p -> Saved p) response
             in
-                ( { model | frenchPhrases = phrases }, Cmd.none )
+                ( { model
+                    | frenchPhrases = merge model.frenchPhrases savedPhrases
+                  }
+                , Cmd.none
+                )
 
         ReceivePhrasesFromBackend _ ->
             ( model, Cmd.none )
@@ -290,10 +305,10 @@ sendPhraseToBackend uuid phrase =
                 Http.send ReceivePhraseFromBackend request
 
 
-phraseDecoder : JD.Decoder Phrase
+phraseDecoder : JD.Decoder SavedPhrase
 phraseDecoder =
-    JD.map2 Phrase
-        (JD.field "uuid" (JD.nullable JD.string))
+    JD.map2 SavedPhrase
+        (JD.field "uuid" JD.string)
         (JD.field "content" JD.string)
 
 
@@ -301,9 +316,9 @@ updateFrenchPhrases : Model -> ( Model, Cmd Msg )
 updateFrenchPhrases model =
     let
         updatedPhrases =
-            List.append model.frenchPhrases [ model.wordToAdd ]
+            List.append model.frenchPhrases [ Unsaved model.wordToAdd ]
 
-        -- refactor opportunity: extract this into a module
+        -- TODO (refactor opportunity): extract this into a module
         -- we gain better testability and don't need to worry about failure
         -- and we can assert it was called with the right args :(
         focusTask =
@@ -315,13 +330,13 @@ updateFrenchPhrases model =
         saveInLocalStorage =
             LocalStorage.setItem
                 ( "frenchPhrases"
-                , JE.list <| List.map JE.string updatedPhrases
+                , JE.list <| List.map JE.string <| List.map phraseToString updatedPhrases
                 , model.wordToAdd
                 )
     in
         ( { model
             | wordToAdd = ""
-            , frenchPhrases = List.append model.frenchPhrases [ model.wordToAdd ]
+            , frenchPhrases = updatedPhrases
           }
         , Cmd.batch [ focusInput, saveInLocalStorage ]
         )
