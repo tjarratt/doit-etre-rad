@@ -43,7 +43,7 @@ practiceFrenchPhrasesViewTests =
         [ test "it has a textfield to add a phrase to the list" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, setItemSpy, getItemSpy, fakeFocusTaskSpy ]
+                    |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
@@ -64,7 +64,7 @@ practiceFrenchPhrasesViewTests =
         , test "entering a word clears the text input and focuses the input" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, setItemSpy, getItemSpy, fakeFocusTaskSpy ]
+                    |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
@@ -86,6 +86,23 @@ practiceFrenchPhrasesViewTests =
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <| hasLength 0)
+        , test "it doesn't allow duplicates" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allSpies
+                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Event.click
+                    |> Markup.target "#add-word input"
+                    |> Event.input "un petit soucis"
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Markup.target "#add-word input"
+                    |> Event.input "un petit soucis"
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Markup.target "#word-list li"
+                    |> Markup.expect
+                        (elements <| hasLength 1)
         , test "entering a word saves it to local storage" <|
             \() ->
                 Elmer.given defaultModel App.view App.update

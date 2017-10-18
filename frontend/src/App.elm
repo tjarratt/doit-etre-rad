@@ -316,7 +316,7 @@ updateFrenchPhrases : Model -> ( Model, Cmd Msg )
 updateFrenchPhrases model =
     let
         updatedPhrases =
-            List.append model.frenchPhrases [ Unsaved model.wordToAdd ]
+            merge model.frenchPhrases [ Unsaved model.wordToAdd ]
 
         -- TODO (refactor opportunity): extract this into a module
         -- we gain better testability and don't need to worry about failure
