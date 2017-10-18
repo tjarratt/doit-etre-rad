@@ -1,91 +1,121 @@
-port module Ports.LocalStorage exposing (..)
+port module Ports.LocalStorage
+    exposing
+        ( saveFrenchPhrases
+        , setItemResponse
+        , getItem
+        , getItemResponse
+        , setUserUuid
+        , getUserUuid
+        , getUserUuidResponse
+        , phraseEncoder
+        , phraseDecoder
+        )
 
-{-| This is just a dumb wrapper around window.localStorage
-
-
-# setItem
-
-@docs setItem
-
-
-# setItemResponse
-
-@docs setItemResponse
-
-
-# getItem
-
-@docs getItem
+{-| This module is just a dumb wrapper around window.localStorage
 
 
-# callback for getItem
+# Simpler wrappers
 
-@docs getItemResponse
-
-
-# set user uuid
-
-@docs setUserUuid
+@docs setItemResponse, getItem, getItemResponse
 
 
-# get user uuid
+# Slightly-higher-level wrappers for specific keys (user uuid, phrases, etc...)
 
-@docs getUserUuid
+@docs setUserUuid, getUserUuid, getUserUuidResponse, saveFrenchPhrases
 
 
-# callback for getUserUuid
+# JSON supports
 
-@docs getUserUuidResponse
+@docs phraseEncoder, phraseDecoder
 
 -}
 
 import Json.Decode as JD
+import Json.Decode.Pipeline exposing (decode, required)
 import Json.Encode as JE
+import Phrases
 
 
--- port for saving a json-encoded value with a key in local storage
+{-| a better wrapper around setItem for Phrases
+-}
+saveFrenchPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
+saveFrenchPhrases ( phrases, newPhrase ) =
+    setItem
+        ( "frenchPhrases"
+        , JE.list <| List.map phraseEncoder phrases
+        , newPhrase
+        )
+
+
+{-| a json encoder for Phrases, appropriate for local storage
+-}
+phraseEncoder : Phrases.Phrase -> JE.Value
+phraseEncoder phrase =
+    case phrase of
+        Phrases.Saved p ->
+            JE.object
+                [ ( "type", JE.string "SAVED" )
+                , ( "uuid", JE.string p.uuid )
+                , ( "content", JE.string p.content )
+                ]
+
+        Phrases.Unsaved str ->
+            JE.object
+                [ ( "type", JE.string "UNSAVED" )
+                , ( "content", JE.string str )
+                ]
+
+
+{-| a json decoder for Phrases, appropriate for local storage
+-}
+phraseDecoder : JD.Decoder Phrases.Phrase
+phraseDecoder =
+    JD.oneOf
+        [ savedPhraseDecoder
+        , unsavedPhraseDecoder
+        ]
+
+
+savedPhraseDecoder : JD.Decoder Phrases.Phrase
+savedPhraseDecoder =
+    JD.map Phrases.Saved <|
+        JD.map2 Phrases.SavedPhrase
+            (JD.at [ "uuid" ] JD.string)
+            (JD.at [ "content" ] JD.string)
+
+
+unsavedPhraseDecoder : JD.Decoder Phrases.Phrase
+unsavedPhraseDecoder =
+    decode Phrases.Unsaved
+        |> required "content" JD.string
 
 
 port setItem : ( String, JD.Value, String ) -> Cmd msg
 
 
-
--- port for acknowledging that we saved a json-encoded value in local storage
-
-
+{-| generic response to indicate that a value has been saved to local storage
+-}
 port setItemResponse : (JD.Value -> msg) -> Sub msg
 
 
-
--- port for retrieving previously-saved json encoded values in local storage
-
-
+{-| a port to request a value from local storage
+-}
 port getItem : String -> Cmd msg
 
 
-
--- subscribe part of getItem port
-
-
+{-| a generic reponse for a requested value from local storage
+-}
 port getItemResponse : (( String, Maybe JE.Value ) -> msg) -> Sub msg
 
 
-
--- port for setting user's uuid
-
-
+{-| a higher-level wrapper around setItem
+-}
 port setUserUuid : String -> Cmd msg
 
 
-
--- port for getting user's uuid
-
-
+{-| a slightly more type-safe versin of getItem
+-}
 port getUserUuid : String -> Cmd msg
-
-
-
--- port subscribe part of getUserUuid
 
 
 port getUserUuidResponse : (Maybe String -> msg) -> Sub msg

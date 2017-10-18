@@ -167,27 +167,8 @@ update msg model =
             else
                 updateFrenchPhrases model
 
-        ReceiveFromLocalStorage ( "frenchPhrases", Just value ) ->
-            case JD.decodeValue (JD.list JD.string) value of
-                Ok values ->
-                    let
-                        unsavedPhrases =
-                            List.map (\v -> Unsaved v) values
-
-                        updatedPhrases =
-                            merge model.frenchPhrases unsavedPhrases
-                    in
-                        ( { model
-                            | frenchPhrases = updatedPhrases
-                          }
-                        , Cmd.none
-                        )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        ReceiveFromLocalStorage ( _, _ ) ->
-            ( model, Cmd.none )
+        ReceiveFromLocalStorage ( key, value ) ->
+            handleValueFromLocalStorage model key value
 
         DidSaveToLocalStorage jsonValue ->
             ( model, sendPhraseToBackend model.userUuid jsonValue )
@@ -236,6 +217,29 @@ update msg model =
             ( model, Cmd.none )
 
         Noop ->
+            ( model, Cmd.none )
+
+
+handleValueFromLocalStorage : Model -> String -> Maybe JE.Value -> ( Model, Cmd msg )
+handleValueFromLocalStorage model key maybeValue =
+    case ( key, maybeValue ) of
+        ( "frenchPhrases", Just value ) ->
+            case JD.decodeValue (JD.list LocalStorage.phraseDecoder) value of
+                Ok phrases ->
+                    let
+                        updatedPhrases =
+                            merge model.frenchPhrases phrases
+                    in
+                        ( { model
+                            | frenchPhrases = updatedPhrases
+                          }
+                        , Cmd.none
+                        )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ( _, _ ) ->
             ( model, Cmd.none )
 
 
@@ -328,11 +332,7 @@ updateFrenchPhrases model =
             Task.perform (\_ -> Noop) focusTask
 
         saveInLocalStorage =
-            LocalStorage.setItem
-                ( "frenchPhrases"
-                , JE.list <| List.map JE.string <| List.map phraseToString updatedPhrases
-                , model.wordToAdd
-                )
+            LocalStorage.saveFrenchPhrases ( updatedPhrases, model.wordToAdd )
     in
         ( { model
             | wordToAdd = ""

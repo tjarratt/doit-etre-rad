@@ -24,8 +24,6 @@ Then I should be able to add translations as well
 Icebox
 ------
 
-* remove dupes
-* save uuids to localstorage
 * show user when they are offline
 * tap button to update after offline-mode
 * delete items from list

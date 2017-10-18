@@ -106,18 +106,18 @@ practiceFrenchPhrasesViewTests =
         , test "entering a word saves it to local storage" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy, setItemSpy, fakeFocusTaskSpy ]
+                    |> Spy.use [ getUserUuidSpy, getItemSpy, saveFrenchPhrasesSpy, fakeFocusTaskSpy ]
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#add-word input"
                     |> Event.input "c'est simple"
                     |> Markup.target "#add-word button"
                     |> Event.click
-                    |> Spy.expect "setItem" (wasCalled 1)
+                    |> Spy.expect "saveFrenchPhrases" (wasCalled 1)
         , test "it applies focus to the text input after a word is added" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy, setItemSpy, fakeFocusTaskSpy ]
+                    |> Spy.use [ getUserUuidSpy, getItemSpy, saveFrenchPhrasesSpy, fakeFocusTaskSpy ]
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#add-word input"
@@ -221,10 +221,6 @@ userUuidTests =
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Subscription.send "userUuidResponseEffect" Nothing
-                    |> Markup.target "#add-word input"
-                    |> Event.input "anana qui parle"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
                     |> Subscription.send "savedToLocalStorageEffect" (JE.string "anana qui parle")
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post "/api/phrases/french")
@@ -240,9 +236,9 @@ defaultModel =
     App.defaultModel 0
 
 
-setItemSpy : Spy
-setItemSpy =
-    Spy.create "setItem" (\_ -> LocalStorage.setItem)
+saveFrenchPhrasesSpy : Spy
+saveFrenchPhrasesSpy =
+    Spy.create "saveFrenchPhrases" (\_ -> LocalStorage.saveFrenchPhrases)
         |> andCallFake (\_ -> Cmd.none)
 
 
@@ -264,17 +260,17 @@ mockedGetItemResponse =
     ( "frenchPhrases"
     , Just <|
         JE.list <|
-            List.map JE.string longPhrases
+            List.map LocalStorage.phraseEncoder longPhrases
     )
 
 
-longPhrases : List String
+longPhrases : List Phrase
 longPhrases =
-    [ "i've got a lovely bunch of coconuts"
-    , "there they are all standing in a row"
-    , "big ones, small ones, some as big as your head"
-    , "give them a twist a flick of the wrist"
-    , "that's what the showman said"
+    [ Unsaved "i've got a lovely bunch of coconuts"
+    , Unsaved "there they are all standing in a row"
+    , Unsaved "big ones, small ones, some as big as your head"
+    , Unsaved "give them a twist a flick of the wrist"
+    , Unsaved "that's what the showman said"
     ]
 
 
@@ -336,7 +332,7 @@ nextUuidSpy =
 
 allSpies : List Spy
 allSpies =
-    [ setItemSpy
+    [ saveFrenchPhrasesSpy
     , getItemSpy
     , getItemResponseSpy
     , setUserUuidSpy
