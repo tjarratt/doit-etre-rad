@@ -24,13 +24,14 @@ Then I should be able to add translations as well
 Icebox
 ------
 
+* remove dupes
+* save uuids to localstorage
 * show user when they are offline
 * tap button to update after offline-mode
 * delete items from list
 * css (bootstrap, with elm-css ???)
 * "practice mode"
 * two-sided cards ?
-* remove dupes
 * shake on validation error
 * manual re-sync when there are changes to sync
 
