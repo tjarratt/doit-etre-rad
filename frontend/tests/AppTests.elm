@@ -16,6 +16,7 @@ import Elmer.Platform.Subscription as Subscription
 import Elmer.Platform.Command as Command
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
+import Http
 import Json.Decode as JD
 import Json.Encode as JE
 import Phrases exposing (..)
@@ -106,7 +107,7 @@ practiceFrenchPhrasesViewTests =
         , test "entering a word saves it to local storage" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy, saveFrenchPhrasesSpy, fakeFocusTaskSpy ]
+                    |> Spy.use allSpies
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#add-word input"
@@ -114,10 +115,27 @@ practiceFrenchPhrasesViewTests =
                     |> Markup.target "#add-word button"
                     |> Event.click
                     |> Spy.expect "saveFrenchPhrases" (wasCalled 1)
+        , test "entering a word saves it to the backend as well" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> Subscription.send "itemResponseEffect" mockedGetItemResponse
+                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Event.click
+                    |> Markup.target "#add-word input"
+                    |> Event.input "c'est simple"
+                    |> Markup.target "#add-word button"
+                    |> Event.click
+                    |> Subscription.send "savedToLocalStorageEffect" mockedSaveItemResponse
+                    |> Elmer.Http.expectThat
+                        (Elmer.Http.Route.post "/api/phrases/french")
+                        (wasRequested 1)
         , test "it applies focus to the text input after a word is added" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy, saveFrenchPhrasesSpy, fakeFocusTaskSpy ]
+                    |> Spy.use allSpies
                     |> Markup.target "#modes button:nth-child(1)"
                     |> Event.click
                     |> Markup.target "#add-word input"
@@ -262,6 +280,11 @@ mockedGetItemResponse =
         JE.list <|
             List.map LocalStorage.phraseEncoder longPhrases
     )
+
+
+mockedSaveItemResponse : JD.Value
+mockedSaveItemResponse =
+    LocalStorage.phraseEncoder <| Unsaved "This tradition is 3000+ years old"
 
 
 longPhrases : List Phrase
