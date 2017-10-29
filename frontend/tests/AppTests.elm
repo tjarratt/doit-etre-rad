@@ -22,6 +22,7 @@ import Json.Encode as JE
 import Phrases exposing (..)
 import Task
 import Random.Pcg exposing (Seed, initialSeed)
+import Scenarios exposing (..)
 import Uuid exposing (uuidGenerator)
 import UuidGenerator
 
@@ -32,7 +33,7 @@ initialViewTests =
         [ test "it has an option to practice french phrases" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Markup.target "#modes button:nth-child(1)"
+                    |> Markup.target "#Modes button:nth-child(1)"
                     |> Markup.expect
                         (element <| hasText "French Phrases")
         ]
@@ -46,16 +47,9 @@ practiceFrenchPhrasesViewTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "un petit soucis"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "pas de problème"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "un petit soucis"
+                    |> addPhraseToPractice "pas de problème"
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <|
@@ -67,12 +61,8 @@ practiceFrenchPhrasesViewTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "un petit soucis"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "un petit soucis"
                     |> Markup.target "#add-word input"
                     |> Markup.expect
                         (element <| hasProperty ( "value", "" ))
@@ -80,10 +70,8 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use [ getUserUuidSpy, getItemSpy ]
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice ""
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <| hasLength 0)
@@ -91,16 +79,9 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "un petit soucis"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "un petit soucis"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "un petit soucis"
+                    |> addPhraseToPractice "un petit soucis"
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <| hasLength 1)
@@ -108,12 +89,8 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "c'est simple"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "c'est simple"
                     |> Spy.expect "saveFrenchPhrases" (wasCalled 1)
         , test "entering a word saves it to the backend as well" <|
             \() ->
@@ -122,12 +99,8 @@ practiceFrenchPhrasesViewTests =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" mockedGetItemResponse
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "c'est simple"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "c'est simple"
                     |> Subscription.send "savedToLocalStorageEffect" mockedSaveItemResponse
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post "/api/phrases/french")
@@ -136,12 +109,8 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
-                    |> Markup.target "#add-word input"
-                    |> Event.input "c'est simple"
-                    |> Markup.target "#add-word button"
-                    |> Event.click
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "c'est simple"
                     |> Spy.expect "taskFocus"
                         (wasCalled 1)
         ]
@@ -154,8 +123,7 @@ renderingPhrasesTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use [ getUserUuidSpy, getItemSpy ]
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Spy.expect "getItem"
                         (wasCalledWith
                             [ stringArg "frenchPhrases" ]
@@ -165,8 +133,7 @@ renderingPhrasesTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use [ getUserUuidSpy, getItemSpy, getItemResponseSpy ]
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Subscription.send "itemResponseEffect" mockedGetItemResponse
                     |> Markup.target "#word-list li"
                     |> Markup.expect
@@ -184,8 +151,7 @@ renderingPhrasesTests =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" mockedGetItemResponse
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <|
@@ -207,8 +173,7 @@ userUuidTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Spy.expect "getUserUuid" (wasCalled 1)
         , test "the existing uuid will be sent when it does exist" <|
             \() ->
@@ -224,8 +189,7 @@ userUuidTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Subscription.send "userUuidResponseEffect" Nothing
                     |> Spy.expect "setUserUuid"
                         (wasCalledWith
@@ -236,8 +200,7 @@ userUuidTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#modes button:nth-child(1)"
-                    |> Event.click
+                    |> practiceFrenchPhrases
                     |> Subscription.send "userUuidResponseEffect" Nothing
                     |> Subscription.send "savedToLocalStorageEffect" (JE.string "anana qui parle")
                     |> Elmer.Http.expectThat

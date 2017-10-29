@@ -37,13 +37,17 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 -}
 
+import Css
+import Css.Helpers exposing (identifierToString)
 import Dom
 import Json.Decode as JD
 import Json.Encode as JE
 import Html exposing (Html)
 import Html.Attributes
+import Html.CssHelpers
 import Html.Events
 import Http
+import IndexCss
 import List
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
@@ -100,6 +104,10 @@ defaultModel seed =
     }
 
 
+{ id, class, classList } =
+    Html.CssHelpers.withNamespace "index"
+
+
 {-| Returns the HTMl to be rendered based on the current application state
 -}
 view : Model -> Html Msg
@@ -108,7 +116,7 @@ view model =
         Nothing ->
             Html.div []
                 [ Html.h1 [] [ Html.text "I want to practice" ]
-                , Html.div [ Html.Attributes.id "modes" ]
+                , Html.div [ id IndexCss.Modes ]
                     [ Html.button
                         [ Html.Events.onClick PracticeFrenchPhrases
                         , Html.Attributes.class "btn btn-default"
@@ -120,37 +128,56 @@ view model =
         Just FrenchToEnglish ->
             Html.div []
                 [ Html.h1 [] [ Html.text "Practicing French phrases" ]
-                , Html.ul [ Html.Attributes.id "word-list" ] <|
-                    List.map
-                        (\content -> Html.li [] [ Html.text content ])
-                        (List.map
-                            (\phrase -> phraseToString phrase)
-                            model.frenchPhrases
-                        )
-                , Html.form [ Html.Attributes.action "javascript:void(0)" ]
-                    [ Html.div [ Html.Attributes.id "add-word" ]
-                        [ Html.label
-                            [ Html.Attributes.for "add-word--input" ]
-                            [ Html.text "Add a french phrase" ]
-                        , Html.input
-                            [ Html.Attributes.id "add-word--input"
-                            , Html.Attributes.placeholder "à tout de suite"
-                            , Html.Attributes.class "form-control"
-                            , Html.Events.onInput TypePhraseUpdate
-                            , Html.Attributes.value model.wordToAdd
-                            ]
-                            []
-                        , Html.button
-                            [ Html.Events.onClick AddPhraseToPractice
-                            , Html.Attributes.class "btn btn-default"
-                            ]
-                            [ Html.text "Save" ]
-                        ]
-                    ]
+                , addWordForm model
+                , listOfWords model
                 ]
 
         Just _ ->
             Html.div [] [ Html.text "Not done yet ..." ]
+
+
+listOfWords : Model -> Html Msg
+listOfWords model =
+    Html.ul [ Html.Attributes.id "word-list" ] <|
+        List.map
+            (\content -> Html.li [] [ Html.text content ])
+            (List.map
+                (\phrase -> phraseToString phrase)
+                model.frenchPhrases
+            )
+
+
+addWordForm : Model -> Html Msg
+addWordForm model =
+    Html.form
+        [ Html.Attributes.action "javascript:void(0)"
+        , id IndexCss.AddPhraseForm
+        ]
+        [ Html.div
+            [ Html.Attributes.id "add-word"
+            , Html.Attributes.class "text-center"
+            ]
+            [ Html.label
+                [ id IndexCss.AddWordLabel
+                , Html.Attributes.for (identifierToString "" IndexCss.AddWordInput)
+                ]
+                [ Html.text "Add a french phrase" ]
+            , Html.input
+                [ id IndexCss.AddWordInput
+                , Html.Attributes.placeholder "à tout de suite"
+                , Html.Attributes.class "form-control"
+                , Html.Events.onInput TypePhraseUpdate
+                , Html.Attributes.value model.wordToAdd
+                ]
+                []
+            , Html.button
+                [ id IndexCss.AddWordSaveButton
+                , Html.Events.onClick AddPhraseToPractice
+                , Html.Attributes.class "btn btn-default"
+                ]
+                [ Html.text "Save" ]
+            ]
+        ]
 
 
 {-| Modifies application state in response to messages from components
@@ -322,11 +349,14 @@ updateFrenchPhrases model =
         updatedPhrases =
             merge model.frenchPhrases [ Unsaved model.wordToAdd ]
 
+        inputId =
+            (identifierToString "" IndexCss.AddWordInput)
+
         -- TODO (refactor opportunity): extract this into a module
         -- we gain better testability and don't need to worry about failure
         -- and we can assert it was called with the right args :(
         focusTask =
-            Task.onError (\_ -> Task.succeed ()) (Dom.focus "add-word--input")
+            Task.onError (\_ -> Task.succeed ()) (Dom.focus inputId)
 
         focusInput =
             Task.perform (\_ -> Noop) focusTask
