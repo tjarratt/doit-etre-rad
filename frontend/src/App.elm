@@ -49,6 +49,7 @@ import Html.Events
 import Http
 import IndexCss
 import List
+import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
@@ -129,22 +130,53 @@ view model =
             Html.div []
                 [ Html.h1 [] [ Html.text "Practicing French phrases" ]
                 , addWordForm model
-                , listOfWords model
+                , listOfWords model.frenchPhrases
                 ]
 
         Just _ ->
             Html.div [] [ Html.text "Not done yet ..." ]
 
 
-listOfWords : Model -> Html Msg
-listOfWords model =
+listOfWords : List Phrase -> Html Msg
+listOfWords phrases =
     Html.ul [ Html.Attributes.id "word-list" ] <|
         List.map
-            (\content -> Html.li [] [ Html.text content ])
-            (List.map
-                (\phrase -> phraseToString phrase)
-                model.frenchPhrases
+            (\phrase ->
+                Html.li
+                    []
+                    (listItemForPhrase phrase)
             )
+            phrases
+
+
+listItemForPhrase : Phrase -> List (Html Msg)
+listItemForPhrase phrase =
+    case phrase of
+        Saved _ ->
+            [ Html.text <| phraseToString phrase ]
+
+        Unsaved _ ->
+            [ Html.span
+                [ Html.Attributes.class "text-warning" ]
+                [ Html.text <| phraseToString phrase ]
+            , Html.a
+                [ Html.Attributes.href "#"
+                , Html.Attributes.attribute "data-toggle" "tooltip"
+                , Html.Attributes.attribute "data-placement" "bottom"
+                , Html.Attributes.title offlineModeTooltip
+                ]
+                [ Html.span
+                    [ class [ IndexCss.OfflineIndicator ]
+                    , Html.Attributes.class "glyphicon glyphicon-exclamation-sign"
+                    ]
+                    []
+                ]
+            ]
+
+
+offlineModeTooltip : String
+offlineModeTooltip =
+    "This phrase is saved locally, but has not been saved to our server."
 
 
 addWordForm : Model -> Html Msg
@@ -223,11 +255,26 @@ update msg model =
 
         PracticeFrenchPhrases ->
             ( { model | currentActivity = Just FrenchToEnglish }
-            , Cmd.batch [ LocalStorage.getUserUuid "", LocalStorage.getItem "frenchPhrases" ]
+            , Cmd.batch
+                [ LocalStorage.getUserUuid ""
+                , LocalStorage.getItem "frenchPhrases"
+                , Bootstrap.showTooltips ()
+                ]
             )
 
+        ReceivePhraseFromBackend (Ok phrase) ->
+            let
+                savedPhrase =
+                    Saved phrase
+            in
+                ( { model
+                    | frenchPhrases = merge model.frenchPhrases [ savedPhrase ]
+                  }
+                , Bootstrap.showTooltips ()
+                )
+
         ReceivePhraseFromBackend _ ->
-            ( model, Cmd.none )
+            ( model, Bootstrap.showTooltips () )
 
         ReceivePhrasesFromBackend (Ok response) ->
             let
@@ -241,7 +288,7 @@ update msg model =
                 )
 
         ReceivePhrasesFromBackend _ ->
-            ( model, Cmd.none )
+            ( model, Bootstrap.showTooltips () )
 
         Noop ->
             ( model, Cmd.none )

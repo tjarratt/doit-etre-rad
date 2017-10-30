@@ -1,13 +1,14 @@
 module AppTests exposing (..)
 
 import App
+import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Test exposing (..)
 import Expect
 import Elmer exposing (atIndex, hasLength, (<&&>))
 import Elmer.Html as Markup
 import Elmer.Html.Event as Event
-import Elmer.Html.Matchers exposing (element, elements, hasText, hasAttribute, hasProperty)
+import Elmer.Html.Matchers exposing (element, elements, hasClass, hasText, hasAttribute, hasProperty)
 import Elmer.Http
 import Elmer.Http.Matchers exposing (..)
 import Elmer.Http.Route
@@ -69,7 +70,8 @@ practiceFrenchPhrasesViewTests =
         , test "adding a blank word is not valid input" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy ]
+                    |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> addPhraseToPractice ""
                     |> Markup.target "#word-list li"
@@ -79,6 +81,7 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> addPhraseToPractice "un petit soucis"
                     |> addPhraseToPractice "un petit soucis"
@@ -89,6 +92,7 @@ practiceFrenchPhrasesViewTests =
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> addPhraseToPractice "c'est simple"
                     |> Spy.expect "saveFrenchPhrases" (wasCalled 1)
@@ -101,17 +105,36 @@ practiceFrenchPhrasesViewTests =
                     |> Subscription.send "itemResponseEffect" mockedGetItemResponse
                     |> practiceFrenchPhrases
                     |> addPhraseToPractice "c'est simple"
-                    |> Subscription.send "savedToLocalStorageEffect" mockedSaveItemResponse
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post "/api/phrases/french")
                         (wasRequested 1)
+        , test "tooltips are hidden after the word is saved to the backend" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use ((httpSpies "c'est simple") :: sharedSpies)
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "c'est simple"
+                    |> Markup.target "#word-list li .indexOfflineIndicator"
+                    |> Markup.expect
+                        (elements <| hasLength 0)
         , test "it applies focus to the text input after a word is added" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> addPhraseToPractice "c'est simple"
                     |> Spy.expect "taskFocus"
+                        (wasCalled 1)
+        , test "items previously saved in local storage have tooltips" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> practiceFrenchPhrases
+                    |> Spy.expect "bootstrapTooltips"
                         (wasCalled 1)
         ]
 
@@ -122,7 +145,8 @@ renderingPhrasesTests =
         [ test "it initially asks for the french phrases it previously saved" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy ]
+                    |> Spy.use allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> Spy.expect "getItem"
                         (wasCalledWith
@@ -131,7 +155,7 @@ renderingPhrasesTests =
         , test "it renders the phrases from local storage" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
-                    |> Spy.use [ getUserUuidSpy, getItemSpy, getItemResponseSpy ]
+                    |> Spy.use allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> practiceFrenchPhrases
                     |> Subscription.send "itemResponseEffect" mockedGetItemResponse
@@ -162,6 +186,57 @@ renderingPhrasesTests =
                                 <&&> (atIndex 4 <| hasText "give them a twist a flick of the wrist")
                                 <&&> (atIndex 5 <| hasText "that's what the showman said")
                         )
+        ]
+
+
+offlineTests : Test
+offlineTests =
+    describe "when the user is offline"
+        [ test "new phrases will be rendered with a special icon to indicate it wasn't synced" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allOfflineSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> practiceFrenchPhrases
+                    |> addPhraseToPractice "whoops"
+                    |> addPhraseToPractice "hors ligne"
+                    |> Markup.target "#word-list li .indexOfflineIndicator"
+                    |> Markup.expect
+                        (elements <|
+                            (atIndex 0 <| hasClass "glyphicon-exclamation-sign")
+                                <&&> (atIndex 1 <| hasClass "glyphicon-exclamation-sign")
+                        )
+        , test "it renders offline-explanation tooltips" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allOfflineSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> practiceFrenchPhrases
+                    |> Subscription.send "itemResponseEffect" mockedGetItemResponse
+                    |> addPhraseToPractice "hors ligne"
+                    |> Spy.expect "bootstrapTooltips"
+                        (wasCalled 3)
+        , test "existing phrases in local storage get the special icon treatment too" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allOfflineSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> practiceFrenchPhrases
+                    |> Subscription.send "itemResponseEffect" mockedGetItemResponse
+                    |> Markup.target "#word-list li:first-child .indexOfflineIndicator"
+                    |> Markup.expect
+                        (element <| hasClass "glyphicon-exclamation-sign")
+        , test "it renders the offline tooltips for existing phrases too" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use allOfflineSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
+                    |> practiceFrenchPhrases
+                    |> Subscription.send "itemResponseEffect" mockedGetItemResponse
+                    |> Spy.expect "bootstrapTooltips"
+                        (wasCalled 2)
         ]
 
 
@@ -245,11 +320,6 @@ mockedGetItemResponse =
     )
 
 
-mockedSaveItemResponse : JD.Value
-mockedSaveItemResponse =
-    LocalStorage.phraseEncoder <| Unsaved "This tradition is 3000+ years old"
-
-
 longPhrases : List Phrase
 longPhrases =
     [ Unsaved "i've got a lovely bunch of coconuts"
@@ -297,6 +367,12 @@ fakeFocusTaskSpy =
         |> andCallFake (fakeFocusTaskPerform ())
 
 
+showTooltipSpy : Spy
+showTooltipSpy =
+    Spy.create "bootstrapTooltips" (\_ -> Bootstrap.showTooltips)
+        |> andCallFake (\_ -> Cmd.none)
+
+
 testSeed : Seed
 testSeed =
     initialSeed 1
@@ -316,8 +392,8 @@ nextUuidSpy =
             )
 
 
-allSpies : List Spy
-allSpies =
+sharedSpies : List Spy
+sharedSpies =
     [ saveFrenchPhrasesSpy
     , getItemSpy
     , getItemResponseSpy
@@ -326,9 +402,27 @@ allSpies =
     , getUserUuidResponseSpy
     , savedToLocalStorageSpy
     , fakeFocusTaskSpy
+    , showTooltipSpy
     , nextUuidSpy
-    , httpGetAndPostSpy
     ]
+
+
+httpSpies : String -> Spy
+httpSpies phrase =
+    Elmer.Http.serve
+        [ stubbedGetResponse
+        , stubbedPostForPhrase phrase
+        ]
+
+
+allSpies : List Spy
+allSpies =
+    Elmer.Http.serve [ stubbedGetResponse, stubbedPostResponse ] :: sharedSpies
+
+
+allOfflineSpies : List Spy
+allOfflineSpies =
+    Elmer.Http.serve [ errorGetResponse, errorPostResponse ] :: sharedSpies
 
 
 stubbedGetResponse =
@@ -341,5 +435,19 @@ stubbedPostResponse =
         |> Elmer.Http.Stub.withBody "{\"uuid\":\"new-uuid\", \"content\":\"bonjour\"}"
 
 
-httpGetAndPostSpy =
-    Elmer.Http.serve [ stubbedGetResponse, stubbedPostResponse ]
+stubbedPostForPhrase phrase =
+    Elmer.Http.Stub.for (Elmer.Http.Route.post "/api/phrases/french")
+        |> Elmer.Http.Stub.withBody
+            (JE.encode 0
+                (LocalStorage.phraseEncoder
+                    (Saved { uuid = "uuid_" ++ phrase, content = phrase })
+                )
+            )
+
+
+errorPostResponse =
+    Elmer.Http.Stub.withError Http.NetworkError stubbedPostResponse
+
+
+errorGetResponse =
+    Elmer.Http.Stub.withError Http.NetworkError stubbedGetResponse

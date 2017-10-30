@@ -47,6 +47,19 @@ mergeTests =
                         ]
                 in
                     Expect.equal actual expected
+        , test "it keeps saved phrases rather than unsaved phrases" <|
+            \() ->
+                let
+                    oldPhrases =
+                        [ Unsaved "dang" ]
+
+                    newPhrases =
+                        [ Saved { uuid = "uuid", content = "dang" } ]
+
+                    actual =
+                        merge oldPhrases newPhrases
+                in
+                    Expect.equal actual newPhrases
         ]
 
 

@@ -6,7 +6,7 @@ import Css.Namespace exposing (namespace)
 
 
 type CssClasses
-    = CurrentWordLabel
+    = OfflineIndicator
 
 
 type CssIds
@@ -28,4 +28,6 @@ css =
             ]
         , id AddWordSaveButton
             []
+        , class OfflineIndicator
+            [ marginLeft (px 10) ]
         ]

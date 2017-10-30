@@ -27,4 +27,10 @@
 
     app.ports.getUserUuidResponse.send(uuid);
   });
+
+  app.ports.showTooltips.subscribe(function(arguments) {
+    requestAnimationFrame(function() {
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+  });
 })();

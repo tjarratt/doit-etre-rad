@@ -1,7 +1,15 @@
-module Scenarios exposing (..)
+module Scenarios
+    exposing
+        ( practiceFrenchPhrases
+        , addPhraseToPractice
+        )
 
 import Elmer.Html as Markup
 import Elmer.Html.Event as Event
+import Json.Decode as JD
+import Phrases exposing (..)
+import Ports.LocalStorage as LocalStorage
+import Elmer.Platform.Subscription as Subscription
 
 
 practiceFrenchPhrases testState =
@@ -16,3 +24,9 @@ addPhraseToPractice phrase testState =
         |> Event.input phrase
         |> Markup.target "#add-word button"
         |> Event.click
+        |> Subscription.send "savedToLocalStorageEffect" mockedSaveItemResponse
+
+
+mockedSaveItemResponse : String -> JD.Value
+mockedSaveItemResponse phrase =
+    LocalStorage.phraseEncoder <| Unsaved phrase
