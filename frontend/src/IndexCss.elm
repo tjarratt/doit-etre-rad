@@ -7,6 +7,7 @@ import Css.Namespace exposing (namespace)
 
 type CssClasses
     = OfflineIndicator
+    | PhraseListItem
 
 
 type CssIds
@@ -22,12 +23,15 @@ css =
         [ id AddPhraseForm
             [ margin (px 20)
             ]
-        , id AddWordLabel []
+        , id AddWordLabel [ fontSize (px 16) ]
         , id AddWordInput
             [ marginBottom (px 5)
+            , fontSize (px 16)
             ]
         , id AddWordSaveButton
-            []
+            [ fontSize (px 16) ]
         , class OfflineIndicator
             [ marginLeft (px 10) ]
+        , class PhraseListItem
+            [ fontSize (px 16) ]
         ]

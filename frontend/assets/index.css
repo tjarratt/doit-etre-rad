@@ -2,10 +2,23 @@
     margin: 20px;
 }
 
+#AddWordLabel {
+    font-size: 16px;
+}
+
 #AddWordInput {
     margin-bottom: 5px;
+    font-size: 16px;
+}
+
+#AddWordSaveButton {
+    font-size: 16px;
 }
 
 .indexOfflineIndicator {
     margin-left: 10px;
+}
+
+.indexPhraseListItem {
+    font-size: 16px;
 }

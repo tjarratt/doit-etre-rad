@@ -143,7 +143,7 @@ listOfWords phrases =
         List.map
             (\phrase ->
                 Html.li
-                    []
+                    [ class [ IndexCss.PhraseListItem ] ]
                     (listItemForPhrase phrase)
             )
             phrases
