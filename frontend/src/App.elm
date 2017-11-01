@@ -70,12 +70,12 @@ type TranslationActivity
 
 type Msg
     = Noop
+    | ReceiveUserUuid (Maybe String)
     | PracticeFrenchPhrases
     | TypePhraseUpdate String
     | AddPhraseToPractice
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
-    | ReceiveUserUuid (Maybe String)
     | ReceivePhrasesFromBackend (Result Http.Error (List SavedPhrase))
     | ReceivePhraseFromBackend (Result Http.Error SavedPhrase)
 
@@ -256,7 +256,7 @@ update msg model =
         PracticeFrenchPhrases ->
             ( { model | currentActivity = Just FrenchToEnglish }
             , Cmd.batch
-                [ LocalStorage.getUserUuid ""
+                [ LocalStorage.getUserUuid ()
                 , LocalStorage.getItem "frenchPhrases"
                 , Bootstrap.showTooltips ()
                 ]

@@ -115,7 +115,7 @@ port setUserUuid : String -> Cmd msg
 
 {-| a slightly more type-safe versin of getItem
 -}
-port getUserUuid : String -> Cmd msg
+port getUserUuid : () -> Cmd msg
 
 
 port getUserUuidResponse : (Maybe String -> msg) -> Sub msg
