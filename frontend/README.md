@@ -1,37 +1,27 @@
 ## User Stories
 ===============
 
-GIVEN that I am a non-native french speaker
-WHEN I do not have an internet connection
-AND I am practicing french phrases
-AND I enter a phrase
-THEN I should see an indication that it has not been saved
-
 WHEN I do have an internet connection again
 AND I tap the "manual sync" button
 THEN I should see the unsaved indicator go away
 AND if I refresh the page
-THEN I should see all of my phrases
+THEN I should still see all of my phrases
 
 -----
 
 Given that I am a non-native french speaker
 When I enter some french phrases to practice
-Then I should be able to add translations as well
+Then I should be able to add translations or notes as well
 
 -----
 
 Icebox
 ------
 
-* show user when they are offline
-* tap button to update after offline-mode
 * delete items from list
-* css (bootstrap, with elm-css ???)
 * "practice mode"
 * two-sided cards ?
 * shake on validation error
-* manual re-sync when there are changes to sync
 
 -----
 
