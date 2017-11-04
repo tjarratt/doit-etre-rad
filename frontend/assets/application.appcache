@@ -4,7 +4,13 @@ index-VERSION.css
 elm-init-VERSION.js
 
 CACHE:
+/favicon.ico
+//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js
+//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js
 //maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css
+//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/glyphicons-halflings-regular.woff2
+//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/glyphicons-halflings-regular.woff
+//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/glyphicons-halflings-regular.ttf
 
 NETWORK:
 /api
