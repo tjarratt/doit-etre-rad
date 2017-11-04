@@ -9,3 +9,10 @@ Things I believe about Elmer
   - too few ? it blows up during test execution
 * elmer http
   - seems you can't add two spies with the same URL, differing verbs
+* elmer html
+  - jesus christ
+  - apparently if you have a selector like
+        '#container tag#something'
+    or even
+        '#container tag:pseudo-selector'
+    it actually selects the first 'tag' in '#container'

@@ -88,7 +88,7 @@ type alias Model =
     , currentSeed : Seed
     , currentActivity : Maybe TranslationActivity
     , wordToAdd : String
-    , frenchPhrases : List Phrase
+    , phrases : List Phrase
     , errors : Int
     }
 
@@ -101,7 +101,7 @@ defaultModel seed =
     , currentSeed = initialSeed seed
     , currentActivity = Nothing
     , wordToAdd = ""
-    , frenchPhrases = []
+    , phrases = []
     , errors = 0
     }
 
@@ -118,26 +118,34 @@ view model =
         Nothing ->
             Html.div []
                 [ Html.h1 [] [ Html.text "I want to practice" ]
-                , activityButton "French words and phrases" PracticeFrenchPhrases
-                , activityButton "English words and phrases" PracticeEnglishPhrases
+                , activityButton "French words and phrases" "practiceFrench" PracticeFrenchPhrases
+                , activityButton "English words and phrases" "practiceEnglish" PracticeEnglishPhrases
                 ]
 
         Just FrenchToEnglish ->
             Html.div []
                 [ Html.h1 [] [ Html.text "Practicing French phrases" ]
-                , addWordForm model
-                , listOfWords model.frenchPhrases
+                , addWordForm "à tout de suite" model
+                , listOfWords model.phrases
+                ]
+
+        Just EnglishToFrench ->
+            Html.div []
+                [ Html.h1 [] [ Html.text "Practicing English phrases" ]
+                , addWordForm "colorless green ideas sleep furiously" model
+                , listOfWords model.phrases
                 ]
 
         Just _ ->
             Html.div [] [ Html.text "Not done yet ..." ]
 
 
-activityButton : String -> Msg -> Html Msg
-activityButton title msg =
+activityButton : String -> String -> Msg -> Html Msg
+activityButton title idAttr msg =
     Html.div [ id IndexCss.Modes ]
         [ Html.button
             [ Html.Events.onClick msg
+            , Html.Attributes.id idAttr
             , Html.Attributes.class "btn btn-default"
             ]
             [ Html.text title ]
@@ -186,8 +194,8 @@ offlineModeTooltip =
     "This phrase is saved locally, but has not been saved to our server."
 
 
-addWordForm : Model -> Html Msg
-addWordForm model =
+addWordForm : String -> Model -> Html Msg
+addWordForm placeholder model =
     Html.form
         [ Html.Attributes.action "javascript:void(0)"
         , id IndexCss.AddPhraseForm
@@ -200,10 +208,10 @@ addWordForm model =
                 [ id IndexCss.AddWordLabel
                 , Html.Attributes.for (identifierToString "" IndexCss.AddWordInput)
                 ]
-                [ Html.text "Add a french phrase" ]
+                [ Html.text (inputLabel model.currentActivity) ]
             , Html.input
                 [ id IndexCss.AddWordInput
-                , Html.Attributes.placeholder "à tout de suite"
+                , Html.Attributes.placeholder placeholder
                 , Html.Attributes.class "form-control"
                 , Html.Events.onInput TypePhraseUpdate
                 , Html.Attributes.value model.wordToAdd
@@ -219,6 +227,19 @@ addWordForm model =
         ]
 
 
+inputLabel : Maybe TranslationActivity -> String
+inputLabel currentActivity =
+    case currentActivity of
+        Just EnglishToFrench ->
+            "Add an english phrase"
+
+        Just FrenchToEnglish ->
+            "Add a french phrase"
+
+        _ ->
+            "Impossible state whoops !"
+
+
 {-| Modifies application state in response to messages from components
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -228,7 +249,7 @@ update msg model =
             startActivity FrenchToEnglish "frenchPhrases" model
 
         PracticeEnglishPhrases ->
-            ( model, Cmd.none )
+            startActivity EnglishToFrench "englishPhrases" model
 
         TypePhraseUpdate phrase ->
             ( { model | wordToAdd = phrase }, Cmd.none )
@@ -243,15 +264,15 @@ update msg model =
             handleValueFromLocalStorage model key value
 
         DidSaveToLocalStorage jsonValue ->
-            ( model, sendPhraseToBackend model.userUuid jsonValue )
+            ( model, sendPhraseToBackend model.currentActivity model.userUuid jsonValue )
 
         ReceiveUserUuid (Just uuidString) ->
             let
                 uuid =
-                    Uuid.fromString uuidString
+                    (Uuid.fromString uuidString)
             in
                 ( { model | userUuid = uuid }
-                , getPhrasesFromBackend uuid
+                , getPhrasesFromBackend model.currentActivity uuid
                 )
 
         ReceiveUserUuid Nothing ->
@@ -272,7 +293,7 @@ update msg model =
                     Saved phrase
             in
                 ( { model
-                    | frenchPhrases = merge model.frenchPhrases [ savedPhrase ]
+                    | phrases = merge model.phrases [ savedPhrase ]
                   }
                 , Bootstrap.showTooltips ()
                 )
@@ -286,7 +307,7 @@ update msg model =
                     List.map (\p -> Saved p) response
             in
                 ( { model
-                    | frenchPhrases = merge model.frenchPhrases savedPhrases
+                    | phrases = merge model.phrases savedPhrases
                   }
                 , Cmd.none
                 )
@@ -312,18 +333,12 @@ startActivity activity localStorageKey model =
 handleValueFromLocalStorage : Model -> String -> Maybe JE.Value -> ( Model, Cmd msg )
 handleValueFromLocalStorage model key maybeValue =
     case ( key, maybeValue ) of
-        ( "frenchPhrases", Just value ) ->
+        ( _, Just value ) ->
             case JD.decodeValue (JD.list LocalStorage.phraseDecoder) value of
                 Ok phrases ->
-                    let
-                        updatedPhrases =
-                            merge model.frenchPhrases phrases
-                    in
-                        ( { model
-                            | frenchPhrases = updatedPhrases
-                          }
-                        , Cmd.none
-                        )
+                    ( { model | phrases = merge model.phrases phrases }
+                    , Cmd.none
+                    )
 
                 _ ->
                     ( model, Cmd.none )
@@ -332,8 +347,8 @@ handleValueFromLocalStorage model key maybeValue =
             ( model, Cmd.none )
 
 
-getPhrasesFromBackend : Maybe Uuid.Uuid -> Cmd Msg
-getPhrasesFromBackend maybeUuid =
+getPhrasesFromBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> Cmd Msg
+getPhrasesFromBackend currentActivity maybeUuid =
     case maybeUuid of
         Nothing ->
             Cmd.none
@@ -342,9 +357,6 @@ getPhrasesFromBackend maybeUuid =
             let
                 uuidStr =
                     Uuid.toString userUuid
-
-                url =
-                    "/api/phrases/french"
 
                 headers =
                     [ Http.header "X-User-Token" uuidStr ]
@@ -355,7 +367,7 @@ getPhrasesFromBackend maybeUuid =
                 config =
                     { method = "GET"
                     , headers = headers
-                    , url = url
+                    , url = urlForCurrentActivity currentActivity
                     , body = Http.emptyBody
                     , expect = expect
                     , timeout = Nothing
@@ -368,8 +380,8 @@ getPhrasesFromBackend maybeUuid =
                 Http.send ReceivePhrasesFromBackend request
 
 
-sendPhraseToBackend : Maybe Uuid.Uuid -> JE.Value -> Cmd Msg
-sendPhraseToBackend uuid phrase =
+sendPhraseToBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> JE.Value -> Cmd Msg
+sendPhraseToBackend currentActivity uuid phrase =
     case uuid of
         Nothing ->
             (Cmd.none)
@@ -385,7 +397,7 @@ sendPhraseToBackend uuid phrase =
                 config =
                     { method = "POST"
                     , headers = [ Http.header "X-User-Token" uuidStr ]
-                    , url = "/api/phrases/french"
+                    , url = urlForCurrentActivity currentActivity
                     , body = Http.jsonBody jsonValue
                     , expect = Http.expectJson phraseDecoder
                     , timeout = Nothing
@@ -396,6 +408,19 @@ sendPhraseToBackend uuid phrase =
                     Http.request config
             in
                 Http.send ReceivePhraseFromBackend request
+
+
+urlForCurrentActivity : Maybe TranslationActivity -> String
+urlForCurrentActivity currentActivity =
+    case currentActivity of
+        Just EnglishToFrench ->
+            "/api/phrases/english"
+
+        Just FrenchToEnglish ->
+            "/api/phrases/french"
+
+        _ ->
+            "/api/phrases/whoops"
 
 
 phraseDecoder : JD.Decoder SavedPhrase
@@ -409,7 +434,7 @@ updateFrenchPhrases : Model -> ( Model, Cmd Msg )
 updateFrenchPhrases model =
     let
         updatedPhrases =
-            merge model.frenchPhrases [ Unsaved model.wordToAdd ]
+            merge model.phrases [ Unsaved model.wordToAdd ]
 
         inputId =
             (identifierToString "" IndexCss.AddWordInput)
@@ -424,11 +449,19 @@ updateFrenchPhrases model =
             Task.perform (\_ -> Noop) focusTask
 
         saveInLocalStorage =
-            LocalStorage.saveFrenchPhrases ( updatedPhrases, model.wordToAdd )
+            case model.currentActivity of
+                Just EnglishToFrench ->
+                    LocalStorage.saveEnglishPhrases ( updatedPhrases, model.wordToAdd )
+
+                Just FrenchToEnglish ->
+                    LocalStorage.saveFrenchPhrases ( updatedPhrases, model.wordToAdd )
+
+                _ ->
+                    Cmd.none
     in
         ( { model
             | wordToAdd = ""
-            , frenchPhrases = updatedPhrases
+            , phrases = updatedPhrases
           }
         , Cmd.batch [ focusInput, saveInLocalStorage ]
         )

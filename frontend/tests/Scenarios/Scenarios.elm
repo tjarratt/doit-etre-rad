@@ -15,13 +15,13 @@ import Elmer.Platform.Subscription as Subscription
 
 practiceFrenchPhrases testState =
     testState
-        |> Markup.target "#Modes button:nth-child(1)"
+        |> Markup.target "#Modes #practiceFrench"
         |> Event.click
 
 
 practiceEnglishPhrases testState =
     testState
-        |> Markup.target "#Modes button:nth-child(2)"
+        |> Markup.target "#Modes #practiceEnglish"
         |> Event.click
 
 

@@ -1,4 +1,9 @@
-module Scenarios.English exposing (allEnglishSpies, allEnglishOfflineSpies, saveEnglishPhrasesSpy)
+module Scenarios.English
+    exposing
+        ( allEnglishSpies
+        , allEnglishOfflineSpies
+        , saveEnglishPhrasesSpy
+        )
 
 import Ports.LocalStorage
 import Scenarios.Shared exposing (..)
@@ -8,12 +13,12 @@ import Elmer.Spy
 
 allEnglishSpies : List Elmer.Spy.Spy
 allEnglishSpies =
-    withEnglishSettings allHttpSpies
+    saveEnglishPhrasesSpy :: (withEnglishSettings allHttpSpies)
 
 
 allEnglishOfflineSpies : List Elmer.Spy.Spy
 allEnglishOfflineSpies =
-    allOfflineSpies "/api/phrases/english" "it's simple" "hello"
+    saveEnglishPhrasesSpy :: (withEnglishSettings allOfflineSpies)
 
 
 saveEnglishPhrasesSpy : Elmer.Spy.Spy

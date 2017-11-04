@@ -7,22 +7,22 @@ import (
 	"github.com/tjarratt/doit-etre-rad/backend/usecases"
 )
 
-func NewAddFrenchPhraseHandler(
-	useCase usecases.AddFrenchPhraseUseCase,
-	paramReader AddFrenchPhraseParamReader,
+func NewAddPhraseHandler(
+	useCase usecases.AddPhraseUseCase,
+	paramReader AddPhraseParamReader,
 ) http.Handler {
-	return addFrenchPhraseHandler{
+	return addPhraseHandler{
 		useCase:     useCase,
 		paramReader: paramReader,
 	}
 }
 
-type addFrenchPhraseHandler struct {
-	useCase     usecases.AddFrenchPhraseUseCase
-	paramReader AddFrenchPhraseParamReader
+type addPhraseHandler struct {
+	useCase     usecases.AddPhraseUseCase
+	paramReader AddPhraseParamReader
 }
 
-func (handler addFrenchPhraseHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (handler addPhraseHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	params, err := handler.paramReader.ReadParamsFromRequest(request)
 	if err != nil {
@@ -31,7 +31,7 @@ func (handler addFrenchPhraseHandler) ServeHTTP(writer http.ResponseWriter, requ
 		return
 	}
 
-	phrase, err := handler.useCase.Execute(usecases.AddFrenchPhraseRequest{
+	phrase, err := handler.useCase.Execute(usecases.AddPhraseRequest{
 		Phrase:   params.Phrase,
 		UserUUID: params.UserUUID,
 	})

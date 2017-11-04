@@ -33,17 +33,14 @@ initialViewTests =
         ]
 
 
-
--- TODO write a similar test for english
-
-
 practiceFrenchPhrasesViewTests : Test
 practiceFrenchPhrasesViewTests =
     practiceActivityTests frenchSetup
 
 
-
--- TODO write a similar test for english
+practiceEnglishPhrasesViewTests : Test
+practiceEnglishPhrasesViewTests =
+    practiceActivityTests englishSetup
 
 
 renderingFrenchPhrasesTests : Test
@@ -51,8 +48,9 @@ renderingFrenchPhrasesTests =
     renderingPhrasesTests frenchSetup
 
 
-
--- TODO : write a similar test for english
+renderingEnglishPhrasesTests : Test
+renderingEnglishPhrasesTests =
+    renderingPhrasesTests englishSetup
 
 
 frenchOfflineTests : Test
@@ -60,8 +58,9 @@ frenchOfflineTests =
     offlineTests { frenchSetup | allSpies = allFrenchOfflineSpies }
 
 
-
--- TODO: write an english version of this
+englishOfflineTests : Test
+englishOfflineTests =
+    offlineTests { englishSetup | allSpies = allEnglishOfflineSpies }
 
 
 frenchUserUuidTests : Test
@@ -69,8 +68,14 @@ frenchUserUuidTests =
     userUuidTests frenchSetup
 
 
+englishUserUuidTests : Test
+englishUserUuidTests =
+    userUuidTests englishSetup
+
+
 frenchSetup =
     { language = "french"
+    , expectedTitle = "Practicing French phrases"
     , startActivityScenario = practiceFrenchPhrases
     , localStorageSpyName = "saveFrenchPhrases"
     , expectedEndpoint = "/api/phrases/french"
@@ -84,6 +89,7 @@ frenchSetup =
 
 englishSetup =
     { language = "english"
+    , expectedTitle = "Practicing English phrases"
     , startActivityScenario = practiceEnglishPhrases
     , localStorageSpyName = "saveEnglishPhrases"
     , expectedEndpoint = "/api/phrases/english"

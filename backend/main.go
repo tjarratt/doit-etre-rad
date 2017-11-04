@@ -24,20 +24,32 @@ func main() {
 	}
 
 	db := db.OpenConnectionOrPanic(app)
-	repository := api.NewFrenchPhrasesRepository(db)
-	showHandler := httpserver.NewShowFrenchPhrasesHandler(
-		usecases.NewShowFrenchPhrasesUseCase(
-			repository,
-		),
-		httpserver.NewShowFrenchPhrasesParamReader(),
-	)
-	router.Handle("/api/phrases/french", showHandler).Methods("GET")
+	frenchPhraseRepository := api.NewPhrasesRepository(api.FRENCH_TO_ENGLISH, db)
+	englishPhraseRepository := api.NewPhrasesRepository(api.ENGLISH_TO_FRENCH, db)
 
-	writeHandler := httpserver.NewAddFrenchPhraseHandler(
-		usecases.NewAddFrenchPhraseUseCase(repository),
-		httpserver.NewAddFrenchPhraseParamReader(),
+	showFrenchHandler := httpserver.NewShowPhrasesHandler(
+		usecases.NewShowPhrasesUseCase(frenchPhraseRepository),
+		httpserver.NewShowPhrasesParamReader(),
 	)
-	router.Handle("/api/phrases/french", writeHandler).Methods("POST")
+	router.Handle("/api/phrases/french", showFrenchHandler).Methods("GET")
+
+	showEnglishHandler := httpserver.NewShowPhrasesHandler(
+		usecases.NewShowPhrasesUseCase(englishPhraseRepository),
+		httpserver.NewShowPhrasesParamReader(),
+	)
+	router.Handle("/api/phrases/english", showEnglishHandler).Methods("GET")
+
+	addFrenchHandler := httpserver.NewAddPhraseHandler(
+		usecases.NewAddPhraseUseCase(frenchPhraseRepository),
+		httpserver.NewAddPhraseParamReader(),
+	)
+	router.Handle("/api/phrases/french", addFrenchHandler).Methods("POST")
+
+	addEnglishHandler := httpserver.NewAddPhraseHandler(
+		usecases.NewAddPhraseUseCase(englishPhraseRepository),
+		httpserver.NewAddPhraseParamReader(),
+	)
+	router.Handle("/api/phrases/english", addEnglishHandler).Methods("POST")
 
 	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 

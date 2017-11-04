@@ -11,26 +11,30 @@ type Phrase struct {
 	Uuid    string
 }
 
-var FRENCH_TO_ENGLISH_TYPE = "FRENCH_TO_ENGLISH"
+type PhraseType string
 
-type FrenchPhrasesRepository interface {
+const FRENCH_TO_ENGLISH PhraseType = "FRENCH_TO_ENGLISH"
+const ENGLISH_TO_FRENCH PhraseType = "ENGLISH_TO_FRENCH"
+
+type PhrasesRepository interface {
 	PhrasesForUserWithUUID(uuid.UUID) ([]Phrase, error)
 	AddPhraseForUserWithUUID(string, uuid.UUID) (Phrase, error)
 }
 
-func NewFrenchPhrasesRepository(db *sql.DB) FrenchPhrasesRepository {
-	return &frenchPhrasesRepo{db: db}
+func NewPhrasesRepository(phraseType PhraseType, db *sql.DB) PhrasesRepository {
+	return &phrasesRepo{db: db, phraseType: phraseType}
 }
 
-type frenchPhrasesRepo struct {
-	db *sql.DB
+type phrasesRepo struct {
+	db         *sql.DB
+	phraseType PhraseType
 }
 
-func (repo *frenchPhrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phrase, error) {
+func (repo *phrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phrase, error) {
 	rows, err := repo.db.Query(
 		"SELECT uuid, phrase FROM phrases WHERE user_uuid = ? AND phrase_type = ?",
 		userUuid.String(),
-		FRENCH_TO_ENGLISH_TYPE,
+		string(repo.phraseType),
 	)
 	if err != nil {
 		return nil, err
@@ -50,7 +54,7 @@ func (repo *frenchPhrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phr
 	return results, nil
 }
 
-func (repo *frenchPhrasesRepo) AddPhraseForUserWithUUID(content string, userUuid uuid.UUID) (Phrase, error) {
+func (repo *phrasesRepo) AddPhraseForUserWithUUID(content string, userUuid uuid.UUID) (Phrase, error) {
 	newUuid, err := uuid.NewRandom()
 	if err != nil {
 		return Phrase{}, err
@@ -60,7 +64,7 @@ func (repo *frenchPhrasesRepo) AddPhraseForUserWithUUID(content string, userUuid
 		newUuid.String(),
 		content,
 		userUuid,
-		FRENCH_TO_ENGLISH_TYPE,
+		string(repo.phraseType),
 	)
 	if err != nil {
 		return Phrase{}, err

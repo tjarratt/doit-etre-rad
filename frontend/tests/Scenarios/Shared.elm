@@ -31,6 +31,7 @@ defaultModel =
 
 type alias ScenarioSetup a b =
     { language : String
+    , expectedTitle : String
     , startActivityScenario : a -> b
     , localStorageSpyName : String
     , getItemSpyName : String
@@ -44,7 +45,16 @@ type alias ScenarioSetup a b =
 
 practiceActivityTests setup =
     describe ("when practicing " ++ setup.language ++ " phrases...")
-        [ test "it has a textfield to add a phrase to the list" <|
+        [ test "it shows the correct title" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> Markup.target "h1"
+                    |> Markup.expect
+                        (element <| hasText setup.expectedTitle)
+        , test "it has a textfield to add a phrase to the list" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
@@ -102,9 +112,9 @@ practiceActivityTests setup =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
-                    |> setup.startActivityScenario
                     |> addPhraseToPractice setup.inputPhrase1
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post setup.expectedEndpoint)
@@ -114,8 +124,8 @@ practiceActivityTests setup =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> setup.startActivityScenario
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> addPhraseToPractice setup.inputPhrase1
                     |> Markup.target "#word-list li .indexOfflineIndicator"
                     |> Markup.expect
@@ -141,7 +151,8 @@ practiceActivityTests setup =
 
 
 renderingPhrasesTests setup =
-    describe "when there are phrases in local storage and the backend..."
+    describe
+        ("when there are " ++ setup.language ++ " phrases in local storage and the backend...")
         [ test "it initially queries local storage for the phrases it previously saved" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
@@ -173,9 +184,9 @@ renderingPhrasesTests setup =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
-                    |> setup.startActivityScenario
                     |> Markup.target "#word-list li"
                     |> Markup.expect
                         (elements <|
@@ -190,8 +201,8 @@ renderingPhrasesTests setup =
 
 
 offlineTests setup =
-    describe "when the user is offline"
-        [ test "new phrases will be rendered with a special icon to indicate it wasn't synced" <|
+    describe ("when the user is offline and adds " ++ setup.language ++ " phrases")
+        [ test "they will be rendered with a special icon to indicate it wasn't synced" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
@@ -205,13 +216,13 @@ offlineTests setup =
                             (atIndex 0 <| hasClass "glyphicon-exclamation-sign")
                                 <&&> (atIndex 1 <| hasClass "glyphicon-exclamation-sign")
                         )
-        , test "it renders offline-explanation tooltips" <|
+        , test "they are rendered with offline-explanation tooltips" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> setup.startActivityScenario
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> addPhraseToPractice "hors ligne"
                     |> Spy.expect "bootstrapTooltips"
@@ -226,13 +237,13 @@ offlineTests setup =
                     |> Markup.target "#word-list li:first-child .indexOfflineIndicator"
                     |> Markup.expect
                         (element <| hasClass "glyphicon-exclamation-sign")
-        , test "it renders the offline tooltips for existing phrases too" <|
+        , test "existing phrases in local storage get the offline tooltips treatment as well" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> setup.startActivityScenario
+                    |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> Spy.expect "bootstrapTooltips"
                         (wasCalled 2)
@@ -240,7 +251,7 @@ offlineTests setup =
 
 
 userUuidTests setup =
-    describe "the user's uuid"
+    describe ("keeping track of " ++ setup.language ++ " phrases by user uuid")
         [ test "will be requested when the app starts" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
@@ -253,6 +264,7 @@ userUuidTests setup =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.get setup.expectedEndpoint)
@@ -273,7 +285,7 @@ userUuidTests setup =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> practiceFrenchPhrases
+                    |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" Nothing
                     |> Subscription.send "savedToLocalStorageEffect" (JE.string "anana qui parle")
                     |> Elmer.Http.expectThat
