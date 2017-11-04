@@ -72,6 +72,7 @@ type Msg
     = Noop
     | ReceiveUserUuid (Maybe String)
     | PracticeFrenchPhrases
+    | PracticeEnglishPhrases
     | TypePhraseUpdate String
     | AddPhraseToPractice
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
@@ -117,13 +118,8 @@ view model =
         Nothing ->
             Html.div []
                 [ Html.h1 [] [ Html.text "I want to practice" ]
-                , Html.div [ id IndexCss.Modes ]
-                    [ Html.button
-                        [ Html.Events.onClick PracticeFrenchPhrases
-                        , Html.Attributes.class "btn btn-default"
-                        ]
-                        [ Html.text "French Phrases" ]
-                    ]
+                , activityButton "French words and phrases" PracticeFrenchPhrases
+                , activityButton "English words and phrases" PracticeEnglishPhrases
                 ]
 
         Just FrenchToEnglish ->
@@ -135,6 +131,17 @@ view model =
 
         Just _ ->
             Html.div [] [ Html.text "Not done yet ..." ]
+
+
+activityButton : String -> Msg -> Html Msg
+activityButton title msg =
+    Html.div [ id IndexCss.Modes ]
+        [ Html.button
+            [ Html.Events.onClick msg
+            , Html.Attributes.class "btn btn-default"
+            ]
+            [ Html.text title ]
+        ]
 
 
 listOfWords : List Phrase -> Html Msg
@@ -217,6 +224,12 @@ addWordForm model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        PracticeFrenchPhrases ->
+            startActivity FrenchToEnglish "frenchPhrases" model
+
+        PracticeEnglishPhrases ->
+            ( model, Cmd.none )
+
         TypePhraseUpdate phrase ->
             ( { model | wordToAdd = phrase }, Cmd.none )
 
@@ -253,15 +266,6 @@ update msg model =
                 , LocalStorage.setUserUuid <| Uuid.toString uuid
                 )
 
-        PracticeFrenchPhrases ->
-            ( { model | currentActivity = Just FrenchToEnglish }
-            , Cmd.batch
-                [ LocalStorage.getUserUuid ()
-                , LocalStorage.getItem "frenchPhrases"
-                , Bootstrap.showTooltips ()
-                ]
-            )
-
         ReceivePhraseFromBackend (Ok phrase) ->
             let
                 savedPhrase =
@@ -292,6 +296,17 @@ update msg model =
 
         Noop ->
             ( model, Cmd.none )
+
+
+startActivity : TranslationActivity -> String -> Model -> ( Model, Cmd msg )
+startActivity activity localStorageKey model =
+    ( { model | currentActivity = Just activity }
+    , Cmd.batch
+        [ LocalStorage.getUserUuid ()
+        , LocalStorage.getItem localStorageKey
+        , Bootstrap.showTooltips ()
+        ]
+    )
 
 
 handleValueFromLocalStorage : Model -> String -> Maybe JE.Value -> ( Model, Cmd msg )

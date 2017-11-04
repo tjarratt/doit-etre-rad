@@ -1,6 +1,7 @@
 port module Ports.LocalStorage
     exposing
         ( saveFrenchPhrases
+        , saveEnglishPhrases
         , setItemResponse
         , getItem
         , getItemResponse
@@ -21,7 +22,7 @@ port module Ports.LocalStorage
 
 # Slightly-higher-level wrappers for specific keys (user uuid, phrases, etc...)
 
-@docs setUserUuid, getUserUuid, getUserUuidResponse, saveFrenchPhrases
+@docs setUserUuid, getUserUuid, getUserUuidResponse, saveFrenchPhrases, saveEnglishPhrases
 
 
 # JSON supports
@@ -36,12 +37,23 @@ import Json.Encode as JE
 import Phrases
 
 
-{-| a better wrapper around setItem for Phrases
+{-| a better wrapper around setItem for Phrases in french
 -}
 saveFrenchPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
 saveFrenchPhrases ( phrases, newPhrase ) =
     setItem
         ( "frenchPhrases"
+        , JE.list <| List.map phraseEncoder phrases
+        , newPhrase
+        )
+
+
+{-| a better wrapper around setItem for Phrases in english
+-}
+saveEnglishPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
+saveEnglishPhrases ( phrases, newPhrase ) =
+    setItem
+        ( "englishPhrases"
         , JE.list <| List.map phraseEncoder phrases
         , newPhrase
         )

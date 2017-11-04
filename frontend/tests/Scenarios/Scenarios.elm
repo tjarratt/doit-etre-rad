@@ -1,6 +1,7 @@
 module Scenarios
     exposing
         ( practiceFrenchPhrases
+        , practiceEnglishPhrases
         , addPhraseToPractice
         )
 
@@ -15,6 +16,12 @@ import Elmer.Platform.Subscription as Subscription
 practiceFrenchPhrases testState =
     testState
         |> Markup.target "#Modes button:nth-child(1)"
+        |> Event.click
+
+
+practiceEnglishPhrases testState =
+    testState
+        |> Markup.target "#Modes button:nth-child(2)"
         |> Event.click
 
 
