@@ -22,15 +22,9 @@ Icebox
 * "practice mode"
 * two-sided cards ?
 * shake on validation error
-
------
-
-GIVEN that I am a non-native french speaker
-WHEN I on the homepage of doit-etre-rad.cfapps.io
-THEN I should be able to select 'english phrase'
-
-AND when I type in a english phrase
-THEN I should see it added to my list of english phrases to translate later
+* spaced repetition for practice
+  - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
+  - https://www.supermemo.com/english/ol/nn_train.htm
 
 -----
 
