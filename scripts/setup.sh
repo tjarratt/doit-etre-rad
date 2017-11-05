@@ -18,6 +18,7 @@ npm -i g npm
 
 # install elm itself
 npm install -g elm
+npm install -g elm-css
 npm install -g elm-test
 npm install -g elm-format
 npm install -g elm-oracle
