@@ -9,7 +9,9 @@ set -ex
 # (purposefully exclused this step since installation of npm can be done
 # differently depending on host OS - whether it's OS X, unix or Windows)
 
-cd $(dirname $0)/../frontend
+cd $(dirname $0)/..
+
+pushd frontend
 
 # ensure npm is up-to-date
 npm -i g npm
@@ -29,7 +31,9 @@ popd
 # install various packages
 elm package install
 
-# start installing backend items
+popd # done with frontend 
+
+# installing backend items
 brew install go
 
 pushd backend
