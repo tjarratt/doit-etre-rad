@@ -6,8 +6,9 @@ import (
 )
 
 type PhraseResponse struct {
-	Content string `json:"content"`
-	Uuid    string `json:"uuid"`
+	Uuid        string `json:"uuid"`
+	Content     string `json:"content"`
+	Translation string `json:translation"`
 }
 
 //go:generate counterfeiter . AddPhraseUseCase
@@ -28,11 +29,12 @@ type addPhraseUseCase struct {
 }
 
 func (usecase addPhraseUseCase) Execute(request AddPhraseRequest) (PhraseResponse, error) {
-	phrase, err := usecase.repository.AddPhraseForUserWithUUID(request.Phrase, request.UserUUID)
+	phrase, err := usecase.repository.AddPhraseForUserWithUUID(request.Phrase, request.Translation, request.UserUUID)
 	return PhraseResponse(phrase), err
 }
 
 type AddPhraseRequest struct {
-	Phrase   string
-	UserUUID uuid.UUID
+	Phrase      string
+	Translation string
+	UserUUID    uuid.UUID
 }

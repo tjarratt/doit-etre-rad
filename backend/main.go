@@ -27,29 +27,23 @@ func main() {
 	frenchPhraseRepository := api.NewPhrasesRepository(api.FRENCH_TO_ENGLISH, db)
 	englishPhraseRepository := api.NewPhrasesRepository(api.ENGLISH_TO_FRENCH, db)
 
-	showFrenchHandler := httpserver.NewShowPhrasesHandler(
-		usecases.NewShowPhrasesUseCase(frenchPhraseRepository),
-		httpserver.NewShowPhrasesParamReader(),
-	)
+	showFrenchHandler := ShowPhrasesHandler(frenchPhraseRepository)
 	router.Handle("/api/phrases/french", showFrenchHandler).Methods("GET")
 
-	showEnglishHandler := httpserver.NewShowPhrasesHandler(
-		usecases.NewShowPhrasesUseCase(englishPhraseRepository),
-		httpserver.NewShowPhrasesParamReader(),
-	)
+	showEnglishHandler := ShowPhrasesHandler(englishPhraseRepository)
 	router.Handle("/api/phrases/english", showEnglishHandler).Methods("GET")
 
-	addFrenchHandler := httpserver.NewAddPhraseHandler(
-		usecases.NewAddPhraseUseCase(frenchPhraseRepository),
-		httpserver.NewAddPhraseParamReader(),
-	)
+	addFrenchHandler := AddPhraseHandler(frenchPhraseRepository)
 	router.Handle("/api/phrases/french", addFrenchHandler).Methods("POST")
 
-	addEnglishHandler := httpserver.NewAddPhraseHandler(
-		usecases.NewAddPhraseUseCase(englishPhraseRepository),
-		httpserver.NewAddPhraseParamReader(),
-	)
+	addEnglishHandler := AddPhraseHandler(englishPhraseRepository)
 	router.Handle("/api/phrases/english", addEnglishHandler).Methods("POST")
+
+	frenchUpdateHandler := UpdatePhraseHandler(frenchPhraseRepository)
+	router.Handle("/api/phrases/french/{uuid}", frenchUpdateHandler).Methods("PUT")
+
+	englishUpdateHandler := UpdatePhraseHandler(englishPhraseRepository)
+	router.Handle("/api/phrases/english/{uuid}", englishUpdateHandler).Methods("PUT")
 
 	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
@@ -66,4 +60,25 @@ func NotFoundHandler(rw http.ResponseWriter, req *http.Request) {
 	path := req.RequestURI
 	rw.WriteHeader(http.StatusBadRequest)
 	rw.Write([]byte(fmt.Sprintf("You done goofed son : '%s'", path)))
+}
+
+func UpdatePhraseHandler(repo api.PhrasesRepository) http.Handler {
+	return httpserver.NewUpdatePhraseHandler(
+		usecases.NewUpdatePhraseUseCase(repo),
+		httpserver.NewUpdatePhraseParamReader(),
+	)
+}
+
+func AddPhraseHandler(repo api.PhrasesRepository) http.Handler {
+	return httpserver.NewAddPhraseHandler(
+		usecases.NewAddPhraseUseCase(repo),
+		httpserver.NewAddPhraseParamReader(),
+	)
+}
+
+func ShowPhrasesHandler(repo api.PhrasesRepository) http.Handler {
+	return httpserver.NewShowPhrasesHandler(
+		usecases.NewShowPhrasesUseCase(repo),
+		httpserver.NewShowPhrasesParamReader(),
+	)
 }

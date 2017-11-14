@@ -32,20 +32,21 @@ func (handler addPhraseHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	}
 
 	phrase, err := handler.useCase.Execute(usecases.AddPhraseRequest{
-		Phrase:   params.Phrase,
-		UserUUID: params.UserUUID,
+		UserUUID:    params.UserUUID,
+		Phrase:      params.Phrase,
+		Translation: params.Translation,
 	})
 
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write([]byte(err.Error()))
+		writer.Write([]byte(wrap(err).Error()))
 		return
 	}
 
 	responseBody, err := json.Marshal(phrase)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte(err.Error()))
+		writer.Write([]byte(wrap(err).Error()))
 		return
 	}
 

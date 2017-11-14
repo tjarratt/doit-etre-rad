@@ -7,8 +7,9 @@ import (
 )
 
 type Phrase struct {
-	Content string
-	Uuid    string
+	Uuid        string
+	Content     string
+	Translation string
 }
 
 type PhraseType string
@@ -18,7 +19,8 @@ const ENGLISH_TO_FRENCH PhraseType = "ENGLISH_TO_FRENCH"
 
 type PhrasesRepository interface {
 	PhrasesForUserWithUUID(uuid.UUID) ([]Phrase, error)
-	AddPhraseForUserWithUUID(string, uuid.UUID) (Phrase, error)
+	AddPhraseForUserWithUUID(string, string, uuid.UUID) (Phrase, error)
+	UpdatePhraseForUserWithUUID(string, string, uuid.UUID, uuid.UUID) (Phrase, error)
 }
 
 func NewPhrasesRepository(phraseType PhraseType, db *sql.DB) PhrasesRepository {
@@ -32,7 +34,7 @@ type phrasesRepo struct {
 
 func (repo *phrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phrase, error) {
 	rows, err := repo.db.Query(
-		"SELECT uuid, phrase FROM phrases WHERE user_uuid = ? AND phrase_type = ?",
+		"SELECT uuid, phrase, translation FROM phrases WHERE user_uuid = ? AND phrase_type = ?",
 		userUuid.String(),
 		string(repo.phraseType),
 	)
@@ -54,15 +56,16 @@ func (repo *phrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phrase, e
 	return results, nil
 }
 
-func (repo *phrasesRepo) AddPhraseForUserWithUUID(content string, userUuid uuid.UUID) (Phrase, error) {
+func (repo *phrasesRepo) AddPhraseForUserWithUUID(content, translation string, userUuid uuid.UUID) (Phrase, error) {
 	newUuid, err := uuid.NewRandom()
 	if err != nil {
 		return Phrase{}, err
 	}
 	_, err = repo.db.Exec(
-		"INSERT INTO phrases (uuid, phrase, user_uuid, phrase_type) VALUES (?, ?, ?, ?)",
+		"INSERT INTO phrases (uuid, phrase, translation, user_uuid, phrase_type) VALUES (?, ?, ?, ?, ?)",
 		newUuid.String(),
 		content,
+		translation,
 		userUuid,
 		string(repo.phraseType),
 	)
@@ -73,5 +76,25 @@ func (repo *phrasesRepo) AddPhraseForUserWithUUID(content string, userUuid uuid.
 	return Phrase{
 		Uuid:    newUuid.String(),
 		Content: content,
+	}, nil
+}
+
+func (repo *phrasesRepo) UpdatePhraseForUserWithUUID(content string, translation string, phraseUuid uuid.UUID, userUuid uuid.UUID) (Phrase, error) {
+	_, err := repo.db.Exec(
+		"UPDATE phrases SET phrase = ?, translation = ? WHERE uuid = ? AND user_uuid = ? AND phrase_type = ?",
+		content,
+		translation,
+		phraseUuid.String(),
+		userUuid.String(),
+		string(repo.phraseType),
+	)
+	if err != nil {
+		return Phrase{}, err
+	}
+
+	return Phrase{
+		Uuid:        phraseUuid.String(),
+		Content:     content,
+		Translation: translation,
 	}, nil
 }

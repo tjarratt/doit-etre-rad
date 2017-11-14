@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -15,8 +16,9 @@ type AddPhraseParamReader interface {
 }
 
 type AddPhraseParams struct {
-	Phrase   string
-	UserUUID uuid.UUID
+	Phrase      string
+	Translation string
+	UserUUID    uuid.UUID
 }
 
 func NewAddPhraseParamReader() AddPhraseParamReader {
@@ -35,18 +37,18 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 
 	userUuid, err := uuid.Parse(tokens[0])
 	if err != nil {
-		return AddPhraseParams{}, err
+		return AddPhraseParams{}, wrap(err)
 	}
 
 	bodyStr, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return AddPhraseParams{}, err
+		return AddPhraseParams{}, wrap(err)
 	}
 
 	requestObj := map[string]string{}
 	err = json.Unmarshal(bodyStr, &requestObj)
 	if err != nil {
-		return AddPhraseParams{}, err
+		return AddPhraseParams{}, wrap(err)
 	}
 
 	content, ok := requestObj["content"]
@@ -54,8 +56,18 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 		return AddPhraseParams{}, errors.New(`{"err": "Could not read phrase from request body"}`)
 	}
 
+	translation, ok := requestObj["translation"]
+	if !ok {
+		translation = ""
+	}
+
 	return AddPhraseParams{
-		Phrase:   content,
-		UserUUID: userUuid,
+		Phrase:      content,
+		Translation: translation,
+		UserUUID:    userUuid,
 	}, nil
+}
+
+func wrap(err error) error {
+	return errors.New(fmt.Sprintf(`{"err": "%s"}`, err.Error()))
 }
