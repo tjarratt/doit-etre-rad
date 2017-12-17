@@ -47,7 +47,11 @@ func (repo *phrasesRepo) PhrasesForUserWithUUID(userUuid uuid.UUID) ([]Phrase, e
 	results := []Phrase{}
 	for rows.Next() {
 		phrase := Phrase{}
-		if err := rows.Scan(&phrase.Uuid, &phrase.Content); err != nil {
+		if err := rows.Scan(
+			&phrase.Uuid,
+			&phrase.Content,
+			&phrase.Translation,
+		); err != nil {
 			return nil, err
 		}
 		results = append(results, phrase)
