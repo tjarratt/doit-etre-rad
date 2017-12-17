@@ -116,7 +116,7 @@ view : Model -> Html Msg
 view model =
     case model.currentActivity of
         Nothing ->
-            Html.div []
+            Html.div [ id IndexCss.LandingPage ]
                 [ Html.h1 [] [ Html.text "I want to practice" ]
                 , activityButton "French words and phrases" "practiceFrench" PracticeFrenchPhrases
                 , activityButton "English words and phrases" "practiceEnglish" PracticeEnglishPhrases
@@ -154,7 +154,9 @@ activityButton title idAttr msg =
 
 listOfWords : List Phrase -> Html Msg
 listOfWords phrases =
-    Html.ul [ Html.Attributes.id "word-list" ] <|
+    Html.ul
+        [ id IndexCss.PhraseList ]
+    <|
         List.map
             (\phrase ->
                 Html.li

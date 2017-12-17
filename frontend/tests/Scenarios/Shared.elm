@@ -62,7 +62,7 @@ practiceActivityTests setup =
                     |> setup.startActivityScenario
                     |> addPhraseToPractice setup.inputPhrase1
                     |> addPhraseToPractice setup.inputPhrase2
-                    |> Markup.target "#word-list li"
+                    |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <|
                             (atIndex 0 <| hasText setup.inputPhrase1)
@@ -85,7 +85,7 @@ practiceActivityTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> addPhraseToPractice ""
-                    |> Markup.target "#word-list li"
+                    |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <| hasLength 0)
         , test "it doesn't allow duplicates" <|
@@ -96,7 +96,7 @@ practiceActivityTests setup =
                     |> setup.startActivityScenario
                     |> addPhraseToPractice setup.inputPhrase1
                     |> addPhraseToPractice setup.inputPhrase1
-                    |> Markup.target "#word-list li"
+                    |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <| hasLength 1)
         , test "entering a word saves it to local storage" <|
@@ -127,7 +127,7 @@ practiceActivityTests setup =
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> addPhraseToPractice setup.inputPhrase1
-                    |> Markup.target "#word-list li .indexOfflineIndicator"
+                    |> Markup.target "#PhraseList li .indexOfflineIndicator"
                     |> Markup.expect
                         (elements <| hasLength 0)
         , test "it applies focus to the text input after a word is added" <|
@@ -170,7 +170,7 @@ renderingPhrasesTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
-                    |> Markup.target "#word-list li"
+                    |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <|
                             (atIndex 0 <| hasText "i've got a lovely bunch of coconuts")
@@ -187,7 +187,7 @@ renderingPhrasesTests setup =
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
-                    |> Markup.target "#word-list li"
+                    |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <|
                             (atIndex 0 <| hasText setup.savedPhrase)
@@ -210,7 +210,7 @@ offlineTests setup =
                     |> setup.startActivityScenario
                     |> addPhraseToPractice "whoops"
                     |> addPhraseToPractice "hors ligne"
-                    |> Markup.target "#word-list li .indexOfflineIndicator"
+                    |> Markup.target "#PhraseList li .indexOfflineIndicator"
                     |> Markup.expect
                         (elements <|
                             (atIndex 0 <| hasClass "glyphicon-exclamation-sign")
@@ -234,7 +234,7 @@ offlineTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
-                    |> Markup.target "#word-list li:first-child .indexOfflineIndicator"
+                    |> Markup.target "#PhraseList li:first-child .indexOfflineIndicator"
                     |> Markup.expect
                         (element <| hasClass "glyphicon-exclamation-sign")
         , test "existing phrases in local storage get the offline tooltips treatment as well" <|

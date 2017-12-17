@@ -1,5 +1,15 @@
+#LandingPage {
+    text-align: center;
+}
+
+#Modes {
+    margin-bottom: 10px;
+}
+
 #AddPhraseForm {
     margin: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px dashed rgb(204, 204, 204);
 }
 
 #AddWordLabel {
@@ -15,10 +25,20 @@
     font-size: 16px;
 }
 
+#PhraseList {
+    list-style-type: none;
+    padding: 0px;
+}
+
 .indexOfflineIndicator {
     margin-left: 10px;
 }
 
 .indexPhraseListItem {
     font-size: 16px;
+    margin: 25px;
+    border: 1px solid rgb(204, 204, 204);
+    padding: 10px;
+    text-align: center;
+    border-radius: 4px;
 }
