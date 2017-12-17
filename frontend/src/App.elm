@@ -222,7 +222,7 @@ addWordForm placeholder model =
                 , Html.Events.onClick AddPhraseToPractice
                 , Html.Attributes.class "btn btn-default"
                 ]
-                [ Html.text "Save" ]
+                [ Html.text "Add" ]
             ]
         ]
 
