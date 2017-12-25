@@ -53,7 +53,7 @@ import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
-import Phrases exposing (..)
+import Phrases
 import Uuid
 import UuidGenerator
 
@@ -74,11 +74,15 @@ type Msg
     | PracticeFrenchPhrases
     | PracticeEnglishPhrases
     | TypePhraseUpdate String
+    | TypeTranslationUpdate String
+    | StartEditingTranslation PhraseViewModel
+    | AddTranslationToPhrase PhraseViewModel
     | AddPhraseToPractice
+    | FlipPhraseCard PhraseViewModel
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
-    | ReceivePhrasesFromBackend (Result Http.Error (List SavedPhrase))
-    | ReceivePhraseFromBackend (Result Http.Error SavedPhrase)
+    | ReceivePhrasesFromBackend (Result Http.Error (List Phrases.SavedPhrase))
+    | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
 
 
 {-| Represents the current state of the application
@@ -88,8 +92,16 @@ type alias Model =
     , currentSeed : Seed
     , currentActivity : Maybe TranslationActivity
     , wordToAdd : String
-    , phrases : List Phrase
+    , currentTranslation : String
+    , phrases : List PhraseViewModel
     , errors : Int
+    }
+
+
+type alias PhraseViewModel =
+    { phrase : Phrases.Phrase
+    , selected : Bool
+    , editing : Bool
     }
 
 
@@ -101,6 +113,7 @@ defaultModel seed =
     , currentSeed = initialSeed seed
     , currentActivity = Nothing
     , wordToAdd = ""
+    , currentTranslation = ""
     , phrases = []
     , errors = 0
     }
@@ -126,14 +139,14 @@ view model =
             Html.div []
                 [ Html.h1 [] [ Html.text "Practicing French phrases" ]
                 , addWordForm "à tout de suite" model
-                , listOfWords model.phrases
+                , phraseListView model model.phrases
                 ]
 
         Just EnglishToFrench ->
             Html.div []
                 [ Html.h1 [] [ Html.text "Practicing English phrases" ]
                 , addWordForm "colorless green ideas sleep furiously" model
-                , listOfWords model.phrases
+                , phraseListView model model.phrases
                 ]
 
         Just _ ->
@@ -152,42 +165,119 @@ activityButton title idAttr msg =
         ]
 
 
-listOfWords : List Phrase -> Html Msg
-listOfWords phrases =
+phraseListView : Model -> List PhraseViewModel -> Html Msg
+phraseListView model phrases =
     Html.ul
         [ id IndexCss.PhraseList ]
     <|
         List.map
             (\phrase ->
-                Html.li
-                    [ class [ IndexCss.PhraseListItem ] ]
-                    (listItemForPhrase phrase)
+                viewForPhrase model phrase
             )
             phrases
 
 
-listItemForPhrase : Phrase -> List (Html Msg)
-listItemForPhrase phrase =
-    case phrase of
-        Saved _ ->
-            [ Html.text <| phraseToString phrase ]
-
-        Unsaved _ ->
-            [ Html.span
-                [ Html.Attributes.class "text-warning" ]
-                [ Html.text <| phraseToString phrase ]
-            , Html.a
-                [ Html.Attributes.href "#"
-                , Html.Attributes.attribute "data-toggle" "tooltip"
-                , Html.Attributes.attribute "data-placement" "bottom"
-                , Html.Attributes.title offlineModeTooltip
+viewForPhrase : Model -> PhraseViewModel -> Html Msg
+viewForPhrase model phrase =
+    let
+        buttonAction =
+            if phrase.selected then
+                Noop
+            else
+                FlipPhraseCard phrase
+    in
+        Html.li
+            [ class [ IndexCss.PhraseListItem ] ]
+            [ Html.div
+                [ class [ IndexCss.CardContainer ]
+                , Html.Events.onClick <| buttonAction
                 ]
-                [ Html.span
-                    [ class [ IndexCss.OfflineIndicator ]
-                    , Html.Attributes.class "glyphicon glyphicon-exclamation-sign"
+                [ Html.div
+                    [ class <| cssClassesForCardFlipper phrase ]
+                    [ frontViewForPhrase phrase
+                    , backViewForPhrase model phrase
                     ]
-                    []
                 ]
+            ]
+
+
+cssClassesForCardFlipper : PhraseViewModel -> List IndexCss.CssClasses
+cssClassesForCardFlipper viewModel =
+    if viewModel.selected then
+        [ IndexCss.CardFlipper, IndexCss.Flip ]
+    else
+        [ IndexCss.CardFlipper ]
+
+
+frontViewForPhrase : PhraseViewModel -> Html Msg
+frontViewForPhrase viewModel =
+    Html.div [ class [ IndexCss.CardFront ] ]
+        [ case viewModel.phrase of
+            Phrases.Saved _ ->
+                Html.text <| Phrases.toString viewModel.phrase
+
+            Phrases.Unsaved _ ->
+                Html.div []
+                    [ Html.span
+                        [ Html.Attributes.class "text-warning" ]
+                        [ Html.text <| Phrases.toString viewModel.phrase ]
+                    , Html.a
+                        [ Html.Attributes.href "#"
+                        , Html.Attributes.attribute "data-toggle" "tooltip"
+                        , Html.Attributes.attribute "data-placement" "bottom"
+                        , Html.Attributes.title offlineModeTooltip
+                        ]
+                        [ Html.span
+                            [ class [ IndexCss.OfflineIndicator ]
+                            , Html.Attributes.class "glyphicon glyphicon-exclamation-sign"
+                            ]
+                            []
+                        ]
+                    ]
+        ]
+
+
+backViewForPhrase : Model -> PhraseViewModel -> Html Msg
+backViewForPhrase model viewModel =
+    let
+        buttonAction =
+            if viewModel.editing then
+                AddTranslationToPhrase viewModel
+            else
+                StartEditingTranslation viewModel
+
+        buttonText =
+            if viewModel.editing then
+                "Save"
+            else
+                "Edit"
+    in
+        Html.div [ class [ IndexCss.CardBack ] ]
+            [ Html.label
+                [ class [ IndexCss.AddTranslationLabel ]
+                , Html.Attributes.for (identifierToString "" IndexCss.AddPhraseTranslation)
+                ]
+                [ Html.text "Add a translation" ]
+            , Html.input
+                [ class [ IndexCss.AddPhraseTranslation ]
+                , Html.Events.onInput TypeTranslationUpdate
+                , Html.Attributes.placeholder "..."
+                , Html.Attributes.class "form-control"
+                , Html.Attributes.value model.currentTranslation
+                ]
+                []
+            , Html.button
+                [ class [ IndexCss.AddTranslationButton ]
+                , Html.Events.onClick <| buttonAction
+                , Html.Attributes.class "btn btn-default"
+                ]
+                [ Html.text buttonText ]
+            , Html.button
+                [ class [ IndexCss.CancelTranslationButton ]
+                , Html.Events.onClick <| FlipPhraseCard viewModel
+                , Html.Attributes.class "btn btn-default"
+                ]
+                [ Html.text "Cancel" ]
             ]
 
 
@@ -260,7 +350,22 @@ update msg model =
             if String.length model.wordToAdd == 0 then
                 ( model, Cmd.none )
             else
-                updateFrenchPhrases model
+                persistCurrentPhrase model
+
+        FlipPhraseCard phrase ->
+            flipCardMatchingPhrase model phrase
+
+        StartEditingTranslation phrase ->
+            startEditingMatchingPhrase model phrase
+
+        TypeTranslationUpdate translation ->
+            ( { model | currentTranslation = translation }, Cmd.none )
+
+        AddTranslationToPhrase phrase ->
+            if String.length model.currentTranslation == 0 then
+                ( model, Cmd.none )
+            else
+                persistCurrentTranslation model phrase
 
         ReceiveFromLocalStorage ( key, value ) ->
             handleValueFromLocalStorage model key value
@@ -291,28 +396,23 @@ update msg model =
 
         ReceivePhraseFromBackend (Ok phrase) ->
             let
-                savedPhrase =
-                    Saved phrase
+                updatedModel =
+                    mergePhraseViewModels model [ Phrases.Saved phrase ]
             in
-                ( { model
-                    | phrases = merge model.phrases [ savedPhrase ]
-                  }
-                , Bootstrap.showTooltips ()
-                )
+                ( updatedModel, Bootstrap.showTooltips () )
 
         ReceivePhraseFromBackend _ ->
             ( model, Bootstrap.showTooltips () )
 
         ReceivePhrasesFromBackend (Ok response) ->
             let
-                savedPhrases =
-                    List.map (\p -> Saved p) response
+                newPhrases =
+                    List.map (\p -> Phrases.Saved p) response
+
+                updatedModel =
+                    mergePhraseViewModels model newPhrases
             in
-                ( { model
-                    | phrases = merge model.phrases savedPhrases
-                  }
-                , Cmd.none
-                )
+                ( updatedModel, Cmd.none )
 
         ReceivePhrasesFromBackend _ ->
             ( model, Bootstrap.showTooltips () )
@@ -338,9 +438,7 @@ handleValueFromLocalStorage model key maybeValue =
         ( _, Just value ) ->
             case JD.decodeValue (JD.list LocalStorage.phraseDecoder) value of
                 Ok phrases ->
-                    ( { model | phrases = merge model.phrases phrases }
-                    , Cmd.none
-                    )
+                    ( mergePhraseViewModels model phrases, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -364,7 +462,7 @@ getPhrasesFromBackend currentActivity maybeUuid =
                     [ Http.header "X-User-Token" uuidStr ]
 
                 expect =
-                    Http.expectJson <| JD.list phraseDecoder
+                    Http.expectJson <| JD.list savedPhraseDecoder
 
                 config =
                     { method = "GET"
@@ -401,7 +499,7 @@ sendPhraseToBackend currentActivity uuid phrase =
                     , headers = [ Http.header "X-User-Token" uuidStr ]
                     , url = urlForCurrentActivity currentActivity
                     , body = Http.jsonBody jsonValue
-                    , expect = Http.expectJson phraseDecoder
+                    , expect = Http.expectJson savedPhraseDecoder
                     , timeout = Nothing
                     , withCredentials = False
                     }
@@ -425,27 +523,65 @@ urlForCurrentActivity currentActivity =
             "/api/phrases/whoops"
 
 
-phraseDecoder : JD.Decoder SavedPhrase
-phraseDecoder =
-    JD.map2 SavedPhrase
+savedPhraseDecoder : JD.Decoder Phrases.SavedPhrase
+savedPhraseDecoder =
+    JD.map3 Phrases.SavedPhrase
         (JD.field "uuid" JD.string)
         (JD.field "content" JD.string)
+        (JD.field "translation" JD.string)
 
 
-updateFrenchPhrases : Model -> ( Model, Cmd Msg )
-updateFrenchPhrases model =
+flipCardMatchingPhrase : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+flipCardMatchingPhrase model viewModel =
     let
-        updatedPhrases =
-            merge model.phrases [ Unsaved model.wordToAdd ]
+        updatedViewModel =
+            List.map
+                (\p ->
+                    if Phrases.phraseEqual p.phrase viewModel.phrase then
+                        { p | selected = (not p.selected), editing = False }
+                    else
+                        { p | selected = False, editing = False }
+                )
+                model.phrases
+    in
+        ( { model | phrases = updatedViewModel }, Cmd.none )
 
-        inputId =
+
+startEditingMatchingPhrase : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+startEditingMatchingPhrase model viewModel =
+    let
+        updatedViewModel =
+            List.map
+                (\p ->
+                    if Phrases.phraseEqual p.phrase viewModel.phrase then
+                        { p | editing = True }
+                    else
+                        { p | editing = False }
+                )
+                model.phrases
+    in
+        ( { model | phrases = updatedViewModel }, Cmd.none )
+
+
+persistCurrentPhrase : Model -> ( Model, Cmd Msg )
+persistCurrentPhrase model =
+    let
+        updatedModel =
+            mergePhraseViewModels
+                model
+                [ Phrases.Unsaved { content = model.wordToAdd, translation = "" } ]
+
+        updatedPhrases =
+            List.map (\p -> p.phrase) updatedModel.phrases
+
+        idToFocus =
             (identifierToString "" IndexCss.AddWordInput)
 
-        -- TODO (refactor opportunity): extract this into a module
+        -- TODO (refactor opportunity): extract focus into a module
         -- we gain better testability and don't need to worry about failure
         -- and we can assert it was called with the right args :(
         focusTask =
-            Task.onError (\_ -> Task.succeed ()) (Dom.focus inputId)
+            Task.onError (\_ -> Task.succeed ()) (Dom.focus idToFocus)
 
         focusInput =
             Task.perform (\_ -> Noop) focusTask
@@ -461,12 +597,72 @@ updateFrenchPhrases model =
                 _ ->
                     Cmd.none
     in
-        ( { model
-            | wordToAdd = ""
-            , phrases = updatedPhrases
-          }
+        ( { updatedModel | wordToAdd = "" }
         , Cmd.batch [ focusInput, saveInLocalStorage ]
         )
+
+
+persistCurrentTranslation : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+persistCurrentTranslation model viewModel =
+    let
+        updatedViewModel =
+            List.map
+                (\viewModel ->
+                    let
+                        phrase : Phrases.Phrase
+                        phrase =
+                            viewModel.phrase
+
+                        translatedPhrase =
+                            Phrases.translate phrase model.currentTranslation
+                    in
+                        if Phrases.phraseEqual phrase viewModel.phrase then
+                            { viewModel
+                                | editing = False
+                                , phrase = translatedPhrase
+                            }
+                        else
+                            viewModel
+                )
+                model.phrases
+
+        phrases =
+            List.map (\p -> p.phrase) updatedViewModel
+
+        localStorageCommand =
+            case model.currentActivity of
+                Just EnglishToFrench ->
+                    LocalStorage.saveEnglishPhrases ( phrases, "" )
+
+                Just FrenchToEnglish ->
+                    LocalStorage.saveFrenchPhrases ( phrases, "" )
+
+                _ ->
+                    Cmd.none
+    in
+        ( { model
+            | phrases = updatedViewModel
+            , currentTranslation = ""
+          }
+        , localStorageCommand
+        )
+
+
+mergePhraseViewModels : Model -> List Phrases.Phrase -> Model
+mergePhraseViewModels model phrases =
+    let
+        existingPhrases =
+            List.map (\p -> p.phrase) model.phrases
+
+        mergedPhrases =
+            Phrases.merge existingPhrases phrases
+
+        phraseViewModels =
+            List.map
+                (\p -> { phrase = p, selected = False, editing = False })
+                mergedPhrases
+    in
+        { model | phrases = phraseViewModels }
 
 
 main =

@@ -42,3 +42,40 @@
     text-align: center;
     border-radius: 4px;
 }
+
+.indexCardContainer {
+    transform: perspective(1000);
+    width: 300px;
+    height: 100px;
+}
+
+.indexCardFlipper {
+    position: relative;
+    transition: 0.6s;
+    transform-style: preserve-3d;
+}
+
+.indexCardFlipper.indexFlip {
+    transform: rotateY(180deg);
+}
+
+.indexCardFront {
+    position: absolute;
+    backface-visibility: hidden;
+    top: 0px;
+    left: 0px;
+    width: 300px;
+    height: 100px;
+    z-index: 2;
+    transform: rotateY(0deg);
+}
+
+.indexCardBack {
+    position: absolute;
+    backface-visibility: hidden;
+    top: 0px;
+    left: 0px;
+    width: 300px;
+    height: 100px;
+    transform: rotateY(180deg);
+}

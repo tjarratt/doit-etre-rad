@@ -1,17 +1,31 @@
 ## User Stories
 ===============
 
+-----
+
+GIVEN that I am a non-native french speaker
+WHEN I have entered some french phrases to practice
+THEN I should be able to add translations or notes as well
+
+**Tasks**
+* save in local storage
+-- tests should be green
+* tests for "render the translation when it exists" (whoops, untested)
+-- tests should be green
+* refactor local storage api to send the entire phrase through (with translation, natch)
+* initially show translation is a label
+* click edit -> input is now editable <textfield>
+* save updated/translated phrase to the backend as well
+* try it out on a mobile device
+* fix hella busted layout ?
+
+----
+
 WHEN I do have an internet connection again
 AND I tap the "manual sync" button
 THEN I should see the unsaved indicator go away
 AND if I refresh the page
-THEN I should still see all of my phrases
-
------
-
-Given that I am a non-native french speaker
-When I enter some french phrases to practice
-Then I should be able to add translations or notes as well
+THEN I should see that none of my phrases are unsaved
 
 -----
 

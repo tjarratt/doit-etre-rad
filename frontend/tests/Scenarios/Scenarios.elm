@@ -3,6 +3,7 @@ module Scenarios
         ( practiceFrenchPhrases
         , practiceEnglishPhrases
         , addPhraseToPractice
+        , addTranslation
         )
 
 import Elmer.Html as Markup
@@ -34,6 +35,24 @@ addPhraseToPractice phrase testState =
         |> Subscription.send "savedToLocalStorageEffect" mockedSaveItemResponse
 
 
+addTranslation translation testState =
+    -- adds the given translation to the FIRST phrase in the list
+    testState
+        -- show the backside of the card
+        |> Markup.target ".indexPhraseListItem .indexCardContainer"
+        |> Event.click
+        -- make the input editable
+        |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
+        |> Event.click
+        -- input the translation desired
+        |> Markup.target ".indexPhraseListItem .indexFlip input"
+        |> Event.input translation
+        -- save the translation
+        |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
+        |> Event.click
+
+
 mockedSaveItemResponse : String -> JD.Value
 mockedSaveItemResponse phrase =
-    LocalStorage.phraseEncoder <| Unsaved phrase
+    LocalStorage.phraseEncoder <|
+        Unsaved { content = phrase, translation = "" }

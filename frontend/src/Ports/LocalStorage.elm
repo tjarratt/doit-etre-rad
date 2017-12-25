@@ -69,12 +69,14 @@ phraseEncoder phrase =
                 [ ( "type", JE.string "SAVED" )
                 , ( "uuid", JE.string p.uuid )
                 , ( "content", JE.string p.content )
+                , ( "translation", JE.string p.translation )
                 ]
 
-        Phrases.Unsaved str ->
+        Phrases.Unsaved p ->
             JE.object
                 [ ( "type", JE.string "UNSAVED" )
-                , ( "content", JE.string str )
+                , ( "content", JE.string p.content )
+                , ( "translation", JE.string p.translation )
                 ]
 
 
@@ -91,15 +93,22 @@ phraseDecoder =
 savedPhraseDecoder : JD.Decoder Phrases.Phrase
 savedPhraseDecoder =
     JD.map Phrases.Saved <|
-        JD.map2 Phrases.SavedPhrase
-            (JD.at [ "uuid" ] JD.string)
-            (JD.at [ "content" ] JD.string)
+        (decode
+            Phrases.SavedPhrase
+            |> (required "uuid" JD.string)
+            |> (required "content" JD.string)
+            |> (required "translation" JD.string)
+        )
 
 
 unsavedPhraseDecoder : JD.Decoder Phrases.Phrase
 unsavedPhraseDecoder =
-    decode Phrases.Unsaved
-        |> required "content" JD.string
+    JD.map Phrases.Unsaved <|
+        (decode
+            Phrases.UnsavedPhrase
+            |> (required "content" JD.string)
+            |> (required "translation" JD.string)
+        )
 
 
 port setItem : ( String, JD.Value, String ) -> Cmd msg

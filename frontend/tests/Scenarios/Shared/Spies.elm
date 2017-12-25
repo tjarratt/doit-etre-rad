@@ -74,11 +74,11 @@ getItemResponse localStorageKey =
 
 longPhrases : List Phrase
 longPhrases =
-    [ Unsaved "i've got a lovely bunch of coconuts"
-    , Unsaved "there they are all standing in a row"
-    , Unsaved "big ones, small ones, some as big as your head"
-    , Unsaved "give them a twist a flick of the wrist"
-    , Unsaved "that's what the showman said"
+    [ Unsaved { content = "i've got a lovely bunch of coconuts", translation = "" }
+    , Unsaved { content = "there they are all standing in a row", translation = "" }
+    , Unsaved { content = "big ones, small ones, some as big as your head", translation = "" }
+    , Unsaved { content = "give them a twist a flick of the wrist", translation = "" }
+    , Unsaved { content = "that's what the showman said", translation = "" }
     ]
 
 

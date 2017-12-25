@@ -2,9 +2,13 @@ module Phrases
     exposing
         ( Phrase(..)
         , SavedPhrase
+        , UnsavedPhrase
         , merge
-        , phraseToString
+        , mergeOne
+        , toString
         , phraseEqual
+        , translate
+        , translationOf
         )
 
 import List
@@ -12,21 +16,25 @@ import List
 
 type Phrase
     = Saved SavedPhrase
-    | Unsaved String
+    | Unsaved UnsavedPhrase
 
 
 type alias SavedPhrase =
     { uuid : String
     , content : String
+    , translation : String
     }
 
 
+type alias UnsavedPhrase =
+    { content : String
+    , translation : String
+    }
 
-{-
-   * capture all of the saved phrases
-   * add "old" unsaved that aren't already in the list
-   * add "new" unsaved that aren't already in the list
--}
+
+mergeOne : List Phrase -> Phrase -> List Phrase
+mergeOne old new =
+    merge old [ new ]
 
 
 merge : List Phrase -> List Phrase -> List Phrase
@@ -45,12 +53,12 @@ merge oldPhrases newPhrases =
             List.append oldUnsaved (List.filter (\p -> phraseNotInList oldUnsaved p) newUnsaved)
 
         savedContent =
-            List.map phraseToString uniqueSavedPhrases
+            List.map toString uniqueSavedPhrases
 
         filterAlreadySeen =
             List.filter
                 (\phrase ->
-                    not <| List.member (phraseToString phrase) savedContent
+                    not <| List.member (toString phrase) savedContent
                 )
     in
         List.append uniqueSavedPhrases (filterAlreadySeen uniqueUnsavedPhrases)
@@ -95,15 +103,51 @@ splitPhrases phrases =
 
 phraseEqual : Phrase -> Phrase -> Bool
 phraseEqual p1 p2 =
-    (phraseToString p1)
-        == (phraseToString p2)
+    case ( p1, p2 ) of
+        ( Saved _, Unsaved _ ) ->
+            (toString p1) == (toString p2)
+
+        ( Unsaved _, Saved _ ) ->
+            (toString p1) == (toString p2)
+
+        ( _, _ ) ->
+            let
+                contentEqual =
+                    (toString p1)
+                        == (toString p2)
+
+                translationEqual =
+                    (translationOf p1)
+                        == (translationOf p2)
+            in
+                contentEqual && translationEqual
 
 
-phraseToString : Phrase -> String
-phraseToString phrase =
+toString : Phrase -> String
+toString phrase =
     case phrase of
         Saved p ->
             p.content
 
-        Unsaved str ->
-            str
+        Unsaved p ->
+            p.content
+
+
+translationOf : Phrase -> String
+translationOf phrase =
+    case phrase of
+        Saved p ->
+            p.translation
+
+        Unsaved p ->
+            p.translation
+
+
+translate : Phrase -> String -> Phrase
+translate phrase translation =
+    case phrase of
+        Saved savedPhrase ->
+            Saved { savedPhrase | translation = translation }
+
+        Unsaved unsavedPhrase ->
+            Unsaved { unsavedPhrase | translation = translation }

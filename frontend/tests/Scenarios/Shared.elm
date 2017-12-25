@@ -29,6 +29,18 @@ defaultModel =
     App.defaultModel 0
 
 
+exactlyOnePhraseSaved : App.Model
+exactlyOnePhraseSaved =
+    { defaultModel
+        | phrases =
+            [ { phrase = Saved { uuid = "the-uuid", content = "bonjour", translation = "" }
+              , selected = False
+              , editing = False
+              }
+            ]
+    }
+
+
 type alias ScenarioSetup a b =
     { language : String
     , expectedTitle : String
@@ -119,7 +131,7 @@ practiceActivityTests setup =
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post setup.expectedEndpoint)
                         (wasRequested 1)
-        , test "tooltips are hidden after the word is saved to the backend" <|
+        , test "offline tooltips are hidden after the word is saved to the backend" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
@@ -139,7 +151,7 @@ practiceActivityTests setup =
                     |> addPhraseToPractice setup.inputPhrase1
                     |> Spy.expect "taskFocus"
                         (wasCalled 1)
-        , test "items previously saved in local storage have tooltips" <|
+        , test "items that are only saved in local storage have tooltips" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
@@ -147,6 +159,80 @@ practiceActivityTests setup =
                     |> setup.startActivityScenario
                     |> Spy.expect "bootstrapTooltips"
                         (wasCalled 1)
+        ]
+
+
+addingTranslationsTests setup =
+    describe
+        ("clicking on a " ++ setup.language ++ " phrase")
+        [ test "it should display a textfield to add a translation" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addPhraseToPractice setup.inputPhrase1
+                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
+                    |> Event.click
+                    |> Markup.target ".indexPhraseListItem .indexAddPhraseTranslation"
+                    |> Markup.expect
+                        (elements <| hasLength 1)
+        , test "it should have a button to edit the translation" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addPhraseToPractice setup.inputPhrase1
+                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
+                    |> Event.click
+                    |> Markup.target ".indexPhraseListItem .indexAddTranslationButton"
+                    |> Markup.expect
+                        (element <| hasText "Edit")
+        , test "it should change the edit button to save when it is clicked" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addPhraseToPractice setup.inputPhrase1
+                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
+                    |> Event.click
+                    |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
+                    |> Event.click
+                    |> Markup.expect
+                        (element <| hasText "Save")
+        , test "it should save the translation to local storage" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addTranslation setup.inputTranslation1
+                    |> Spy.expect setup.localStorageSpyName (wasCalled 1)
+        , test "it should flip the card back over" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addTranslation setup.inputTranslation1
+                    -- trigger local storage response
+                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    -- assert no card is flipped
+                    |> Markup.target ".indexFlip"
+                    |> Markup.expect
+                        (elements <| hasLength 0)
+        , test "it should not save the translation if it is empty" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addTranslation ""
+                    |> Markup.target ".indexPhraseListItem .indexAddTranslationButton"
+                    |> Event.click
+                    |> Spy.expect setup.localStorageSpyName (wasCalled 0)
         ]
 
 

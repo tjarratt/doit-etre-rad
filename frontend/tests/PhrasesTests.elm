@@ -5,6 +5,32 @@ import Test exposing (..)
 import Phrases exposing (..)
 
 
+translateTests : Test
+translateTests =
+    describe "adding a translation"
+        [ test "to a saved phrase" <|
+            \() ->
+                let
+                    phrase =
+                        Saved { uuid = "uuid", content = "hi", translation = "" }
+
+                    translated =
+                        translate phrase "salut"
+                in
+                    Expect.equal (translationOf translated) "salut"
+        , test "to an unsaved phrase" <|
+            \() ->
+                let
+                    phrase =
+                        Unsaved { content = "hi", translation = "" }
+
+                    translated =
+                        translate phrase "salut"
+                in
+                    Expect.equal (translationOf translated) "salut"
+        ]
+
+
 mergeTests : Test
 mergeTests =
     describe "merging two lists of phrases"
@@ -12,12 +38,12 @@ mergeTests =
             \() ->
                 let
                     oldPhrases =
-                        [ Saved { uuid = "uuid", content = "hi" }
-                        , Unsaved "whoops"
+                        [ Saved { uuid = "uuid", content = "hi", translation = "salut" }
+                        , Unsaved { content = "whoops", translation = "" }
                         ]
 
                     newPhrases =
-                        [ Saved { uuid = "uuid", content = "hi" } ]
+                        [ Saved { uuid = "uuid", content = "hi", translation = "salut" } ]
 
                     actual =
                         merge oldPhrases newPhrases
@@ -27,23 +53,23 @@ mergeTests =
             \() ->
                 let
                     oldPhrases =
-                        [ Saved { uuid = "uuid", content = "hi" }
-                        , Unsaved "whoops"
+                        [ Saved { uuid = "uuid", content = "hi", translation = "salut" }
+                        , Unsaved { content = "whoops", translation = "" }
                         ]
 
                     newPhrases =
-                        [ Unsaved "hi"
-                        , Unsaved "whoops"
-                        , Unsaved "cool"
+                        [ Unsaved { content = "hi", translation = "" }
+                        , Unsaved { content = "whoops", translation = "" }
+                        , Unsaved { content = "cool", translation = "" }
                         ]
 
                     actual =
                         merge oldPhrases newPhrases
 
                     expected =
-                        [ Saved { uuid = "uuid", content = "hi" }
-                        , Unsaved "whoops"
-                        , Unsaved "cool"
+                        [ Saved { uuid = "uuid", content = "hi", translation = "salut" }
+                        , Unsaved { content = "whoops", translation = "" }
+                        , Unsaved { content = "cool", translation = "" }
                         ]
                 in
                     Expect.equal actual expected
@@ -51,10 +77,10 @@ mergeTests =
             \() ->
                 let
                     oldPhrases =
-                        [ Unsaved "dang" ]
+                        [ Unsaved { content = "dang", translation = "" } ]
 
                     newPhrases =
-                        [ Saved { uuid = "uuid", content = "dang" } ]
+                        [ Saved { uuid = "uuid", content = "dang", translation = "zut" } ]
 
                     actual =
                         merge oldPhrases newPhrases
@@ -66,24 +92,86 @@ mergeTests =
 equalTests : Test
 equalTests =
     describe "equality"
-        [ test "equal when content matches" <|
+        [ test "equal when content matches (given a translation is missing)" <|
             \() ->
                 let
                     phrase1 =
-                        Saved { uuid = "uuid", content = "woah" }
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = "woah"
+                            }
 
                     phrase2 =
-                        Unsaved "woah"
+                        Unsaved { content = "woah", translation = "" }
+                in
+                    Expect.equal True (phraseEqual phrase1 phrase2)
+        , test "is associative" <|
+            \() ->
+                let
+                    phrase1 =
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = "woah"
+                            }
+
+                    phrase2 =
+                        Unsaved { content = "woah", translation = "" }
+                in
+                    Expect.equal True (phraseEqual phrase2 phrase1)
+        , test "equal when content and translation matches" <|
+            \() ->
+                let
+                    phrase1 =
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = "woah"
+                            }
+
+                    phrase2 =
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = "woah"
+                            }
                 in
                     Expect.equal True (phraseEqual phrase1 phrase2)
         , test "not equal when content differs" <|
             \() ->
                 let
                     phrase1 =
-                        Saved { uuid = "uuid", content = "woah" }
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = ""
+                            }
 
                     phrase2 =
-                        Saved { uuid = "uuid", content = "nope" }
+                        Saved
+                            { uuid = "uuid"
+                            , content = "nope"
+                            , translation = ""
+                            }
+                in
+                    Expect.equal False (phraseEqual phrase1 phrase2)
+        , test "not equal when the translation differs" <|
+            \() ->
+                let
+                    phrase1 =
+                        Saved
+                            { uuid = "uuid"
+                            , content = "dang it"
+                            , translation = "whoops"
+                            }
+
+                    phrase2 =
+                        Saved
+                            { uuid = "uuid"
+                            , content = "dang it"
+                            , translation = "zut alors"
+                            }
                 in
                     Expect.equal False (phraseEqual phrase1 phrase2)
         ]
@@ -96,14 +184,18 @@ toStringTests =
             \() ->
                 let
                     phrase =
-                        Saved { uuid = "uuid", content = "woah" }
+                        Saved
+                            { uuid = "uuid"
+                            , content = "woah"
+                            , translation = "woah"
+                            }
                 in
-                    Expect.equal "woah" (phraseToString phrase)
+                    Expect.equal "woah" (Phrases.toString phrase)
         , test "works with unsaved phrases" <|
             \() ->
                 let
                     phrase =
-                        Unsaved "hello world"
+                        Unsaved { content = "hello world", translation = "" }
                 in
-                    Expect.equal "hello world" (phraseToString phrase)
+                    Expect.equal "hello world" (Phrases.toString phrase)
         ]

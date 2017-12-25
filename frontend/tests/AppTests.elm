@@ -53,6 +53,16 @@ renderingEnglishPhrasesTests =
     renderingPhrasesTests englishSetup
 
 
+addingFrenchTranslationsTests : Test
+addingFrenchTranslationsTests =
+    addingTranslationsTests frenchSetup
+
+
+addingEnglishTranslationsTests : Test
+addingEnglishTranslationsTests =
+    addingTranslationsTests englishSetup
+
+
 frenchOfflineTests : Test
 frenchOfflineTests =
     offlineTests { frenchSetup | allSpies = allFrenchOfflineSpies }
@@ -81,6 +91,7 @@ frenchSetup =
     , expectedEndpoint = "/api/phrases/french"
     , allSpies = allFrenchSpies
     , inputPhrase1 = "c'est simple"
+    , inputTranslation1 = "it's simple"
     , inputPhrase2 = "pas de problème"
     , savedPhrase = "bonjour"
     , getItemSpyName = "frenchPhrases"
@@ -95,6 +106,7 @@ englishSetup =
     , expectedEndpoint = "/api/phrases/english"
     , allSpies = allEnglishSpies
     , inputPhrase1 = "it's simple"
+    , inputTranslation1 = "c'est simple"
     , inputPhrase2 = "no problem"
     , savedPhrase = "hello"
     , getItemSpyName = "englishPhrases"

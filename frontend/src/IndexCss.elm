@@ -8,6 +8,15 @@ import Css.Namespace exposing (namespace)
 type CssClasses
     = OfflineIndicator
     | PhraseListItem
+    | AddPhraseTranslation
+    | AddTranslationLabel
+    | CardContainer
+    | CardFlipper
+    | CardFront
+    | CardBack
+    | Flip
+    | AddTranslationButton
+    | CancelTranslationButton
 
 
 type CssIds
@@ -51,5 +60,42 @@ css =
             , padding (px 10)
             , textAlign center
             , borderRadius (px 4)
+            ]
+        , class AddPhraseTranslation
+            []
+        , class CardContainer
+            [ transform (perspective 1000)
+            , width (px 300)
+            , height (px 100)
+            ]
+        , class CardFlipper
+            [ position relative
+            , property "transition" "0.6s"
+            , property "transform-style" "preserve-3d"
+            , withClass Flip
+                [ transform (rotateY (deg 180)) ]
+            ]
+        , class CardFront
+            [ position absolute
+            , property "backface-visibility" "hidden"
+            , top (px 0)
+            , left (px 0)
+            , width (px 300)
+            , height (px 100)
+
+            -- applies only to front
+            , property "z-index" "2"
+            , property "transform" "rotateY(0deg)"
+            ]
+        , class CardBack
+            [ position absolute
+            , property "backface-visibility" "hidden"
+            , top (px 0)
+            , left (px 0)
+            , width (px 300)
+            , height (px 100)
+
+            -- applies only to back
+            , property "transform" "rotateY(180deg)"
             ]
         ]
