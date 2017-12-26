@@ -60,11 +60,13 @@ stubbedPostResponse endpoint phrase =
             )
 
 
+errorPostResponse : String -> String -> Elmer.Http.HttpResponseStub
 errorPostResponse endpoint phrase =
     stubbedPostResponse endpoint phrase
         |> Elmer.Http.Stub.withError Http.NetworkError
 
 
+errorGetResponse : String -> String -> Elmer.Http.HttpResponseStub
 errorGetResponse endpoint phrase =
     stubbedGetResponse endpoint phrase
         |> Elmer.Http.Stub.withError Http.NetworkError

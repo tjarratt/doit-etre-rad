@@ -16,6 +16,7 @@ import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
 import Json.Encode as JE
 import Scenarios exposing (..)
 import Scenarios.Shared.Spies exposing (..)
+import Scenarios.TestSetup exposing (TestSetup)
 import Test exposing (..)
 
 
@@ -36,20 +37,7 @@ exactlyOnePhraseSaved =
     }
 
 
-type alias ScenarioSetup a b =
-    { language : String
-    , expectedTitle : String
-    , startActivityScenario : a -> b
-    , localStorageSpyName : String
-    , getItemSpyName : String
-    , expectedEndpoint : String
-    , allSpies : List Spy
-    , inputPhrase1 : String
-    , inputPhrase2 : String
-    , savedPhrase : String
-    }
-
-
+practiceActivityTests : TestSetup -> Test
 practiceActivityTests setup =
     describe ("when practicing " ++ setup.language ++ " phrases...")
         [ test "it shows the correct title" <|
@@ -157,6 +145,7 @@ practiceActivityTests setup =
         ]
 
 
+addingTranslationsTests : TestSetup -> Test
 addingTranslationsTests setup =
     describe
         ("clicking on a " ++ setup.language ++ " phrase")
@@ -249,6 +238,7 @@ addingTranslationsTests setup =
         ]
 
 
+renderingPhrasesTests : TestSetup -> Test
 renderingPhrasesTests setup =
     describe
         ("when there are " ++ setup.language ++ " phrases in local storage and the backend...")
@@ -299,6 +289,7 @@ renderingPhrasesTests setup =
         ]
 
 
+offlineTests : TestSetup -> Test
 offlineTests setup =
     describe ("when the user is offline and adds " ++ setup.language ++ " phrases")
         [ test "they will be rendered with a special icon to indicate it wasn't synced" <|
@@ -349,6 +340,7 @@ offlineTests setup =
         ]
 
 
+userUuidTests : TestSetup -> Test
 userUuidTests setup =
     describe ("keeping track of " ++ setup.language ++ " phrases by user uuid")
         [ test "will be requested when the app starts" <|

@@ -1,7 +1,6 @@
 module IndexCss exposing (..)
 
 import Css exposing (..)
-import Css.Elements exposing (body, li)
 import Css.Namespace exposing (namespace)
 
 
@@ -29,6 +28,7 @@ type CssIds
     | PhraseList
 
 
+css : Css.Stylesheet
 css =
     (stylesheet << namespace "index")
         [ id LandingPage

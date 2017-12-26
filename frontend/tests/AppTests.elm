@@ -5,17 +5,11 @@ import Test exposing (..)
 import Elmer exposing (atIndex, hasLength, (<&&>))
 import Elmer.Html as Markup
 import Elmer.Html.Matchers exposing (element, elements, hasClass, hasText, hasAttribute, hasProperty)
-import Elmer.Http
-import Elmer.Http.Matchers exposing (..)
-import Elmer.Http.Route
-import Elmer.Http.Stub
-import Elmer.Platform.Subscription as Subscription
-import Elmer.Spy as Spy
-import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
 import Scenarios exposing (..)
 import Scenarios.French exposing (..)
 import Scenarios.English exposing (..)
 import Scenarios.Shared exposing (..)
+import Scenarios.TestSetup exposing (TestSetup)
 
 
 initialViewTests : Test
@@ -83,6 +77,7 @@ englishUserUuidTests =
     userUuidTests englishSetup
 
 
+frenchSetup : TestSetup
 frenchSetup =
     { language = "french"
     , expectedTitle = "Practicing French phrases"
@@ -98,6 +93,7 @@ frenchSetup =
     }
 
 
+englishSetup : TestSetup
 englishSetup =
     { language = "english"
     , expectedTitle = "Practicing English phrases"

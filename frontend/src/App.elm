@@ -1,6 +1,7 @@
 module App
     exposing
         ( Model
+        , Msg
         , defaultModel
         , view
         , update
@@ -13,7 +14,7 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 # global application state
 
-@docs Model
+@docs Model, Msg
 
 
 # initial application state
@@ -67,6 +68,8 @@ type TranslationActivity
     | DifferentiateFrenchWords
 
 
+{-| Reprenents all of the state changes in the app
+-}
 type Msg
     = Noop
     | ReceiveUserUuid (Maybe String)
