@@ -8,13 +8,7 @@ WHEN I have entered some french phrases to practice
 THEN I should be able to add translations or notes as well
 
 **Tasks**
-* save in local storage
--- tests should be green
-* tests for "render the translation when it exists" (whoops, untested)
--- tests should be green
 * refactor local storage api to send the entire phrase through (with translation, natch)
-* initially show translation is a label
-* click edit -> input is now editable <textfield>
 * save updated/translated phrase to the backend as well
 * try it out on a mobile device
 * fix hella busted layout ?

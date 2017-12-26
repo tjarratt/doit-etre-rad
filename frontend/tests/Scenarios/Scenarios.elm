@@ -4,6 +4,10 @@ module Scenarios
         , practiceEnglishPhrases
         , addPhraseToPractice
         , addTranslation
+        , clickPhrase
+        , editPhrase
+        , typeTranslation
+        , saveTranslation
         )
 
 import Elmer.Html as Markup
@@ -38,16 +42,32 @@ addPhraseToPractice phrase testState =
 addTranslation translation testState =
     -- adds the given translation to the FIRST phrase in the list
     testState
-        -- show the backside of the card
+        |> clickPhrase
+        |> editPhrase
+        |> typeTranslation translation
+        |> saveTranslation
+
+
+clickPhrase testState =
+    testState
         |> Markup.target ".indexPhraseListItem .indexCardContainer"
         |> Event.click
-        -- make the input editable
+
+
+editPhrase testState =
+    testState
         |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
         |> Event.click
-        -- input the translation desired
+
+
+typeTranslation translation testState =
+    testState
         |> Markup.target ".indexPhraseListItem .indexFlip input"
         |> Event.input translation
-        -- save the translation
+
+
+saveTranslation testState =
+    testState
         |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
         |> Event.click
 

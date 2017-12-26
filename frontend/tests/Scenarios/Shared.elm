@@ -165,30 +165,29 @@ practiceActivityTests setup =
 addingTranslationsTests setup =
     describe
         ("clicking on a " ++ setup.language ++ " phrase")
-        [ test "it should display a textfield to add a translation" <|
+        [ test "it should have a button to edit the translation" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> addPhraseToPractice setup.inputPhrase1
-                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
-                    |> Event.click
-                    |> Markup.target ".indexPhraseListItem .indexAddPhraseTranslation"
-                    |> Markup.expect
-                        (elements <| hasLength 1)
-        , test "it should have a button to edit the translation" <|
-            \() ->
-                Elmer.given defaultModel App.view App.update
-                    |> Spy.use setup.allSpies
-                    |> Subscription.with (\() -> App.subscriptions)
-                    |> setup.startActivityScenario
-                    |> addPhraseToPractice setup.inputPhrase1
-                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
-                    |> Event.click
+                    |> clickPhrase
                     |> Markup.target ".indexPhraseListItem .indexAddTranslationButton"
                     |> Markup.expect
                         (element <| hasText "Edit")
+        , test "it should display an editable textfield when edit is clicked" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addPhraseToPractice setup.inputPhrase1
+                    |> clickPhrase
+                    |> editPhrase
+                    |> Markup.target ".indexPhraseListItem input"
+                    |> Markup.expect
+                        (elements <| hasLength 1)
         , test "it should change the edit button to save when it is clicked" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
@@ -196,10 +195,8 @@ addingTranslationsTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> addPhraseToPractice setup.inputPhrase1
-                    |> Markup.target ".indexPhraseListItem .indexCardContainer"
-                    |> Event.click
-                    |> Markup.target ".indexPhraseListItem .indexFlip .indexAddTranslationButton"
-                    |> Event.click
+                    |> clickPhrase
+                    |> editPhrase
                     |> Markup.expect
                         (element <| hasText "Save")
         , test "it should save the translation to local storage" <|
@@ -217,12 +214,33 @@ addingTranslationsTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> addTranslation setup.inputTranslation1
-                    -- trigger local storage response
                     |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
                     -- assert no card is flipped
                     |> Markup.target ".indexFlip"
                     |> Markup.expect
                         (elements <| hasLength 0)
+        , test "it should show the translation if you inspect the card again" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addTranslation setup.inputTranslation1
+                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> clickPhrase
+                    |> Markup.expect (element <| hasText setup.inputTranslation1)
+        , test "it should pre-fill the input when you edit a translation" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addTranslation setup.inputTranslation1
+                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> clickPhrase
+                    |> editPhrase
+                    |> Markup.target ".indexPhraseListItem .indexFlip input"
+                    |> Markup.expect (element <| hasProperty ( "value", setup.inputTranslation1 ))
         , test "it should not save the translation if it is empty" <|
             \() ->
                 Elmer.given exactlyOnePhraseSaved App.view App.update

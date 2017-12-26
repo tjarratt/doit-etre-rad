@@ -253,19 +253,7 @@ backViewForPhrase model viewModel =
                 "Edit"
     in
         Html.div [ class [ IndexCss.CardBack ] ]
-            [ Html.label
-                [ class [ IndexCss.AddTranslationLabel ]
-                , Html.Attributes.for (identifierToString "" IndexCss.AddPhraseTranslation)
-                ]
-                [ Html.text "Add a translation" ]
-            , Html.input
-                [ class [ IndexCss.AddPhraseTranslation ]
-                , Html.Events.onInput TypeTranslationUpdate
-                , Html.Attributes.placeholder "..."
-                , Html.Attributes.class "form-control"
-                , Html.Attributes.value model.currentTranslation
-                ]
-                []
+            [ Html.div [] [ viewForPhraseTranslationText model viewModel ]
             , Html.button
                 [ class [ IndexCss.AddTranslationButton ]
                 , Html.Events.onClick <| buttonAction
@@ -279,6 +267,33 @@ backViewForPhrase model viewModel =
                 ]
                 [ Html.text "Cancel" ]
             ]
+
+
+viewForPhraseTranslationText : Model -> PhraseViewModel -> Html Msg
+viewForPhraseTranslationText model viewModel =
+    if viewModel.editing then
+        Html.input
+            [ class [ IndexCss.AddPhraseTranslation ]
+            , Html.Events.onInput TypeTranslationUpdate
+            , Html.Attributes.placeholder "..."
+            , Html.Attributes.class "form-control"
+            , Html.Attributes.value model.currentTranslation
+            ]
+            []
+    else
+        let
+            currentTranslation =
+                Phrases.translationOf viewModel.phrase
+
+            labelText =
+                if String.isEmpty currentTranslation then
+                    "..."
+                else
+                    currentTranslation
+        in
+            Html.label
+                []
+                [ Html.text <| labelText ]
 
 
 offlineModeTooltip : String
@@ -559,8 +574,16 @@ startEditingMatchingPhrase model viewModel =
                         { p | editing = False }
                 )
                 model.phrases
+
+        phraseTranslation =
+            Phrases.translationOf viewModel.phrase
     in
-        ( { model | phrases = updatedViewModel }, Cmd.none )
+        ( { model
+            | phrases = updatedViewModel
+            , currentTranslation = phraseTranslation
+          }
+        , Cmd.none
+        )
 
 
 persistCurrentPhrase : Model -> ( Model, Cmd Msg )
