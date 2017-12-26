@@ -56,7 +56,7 @@ var _ = Describe("NewAddPhraseHandler", func() {
 		})
 
 		It("returns JSON describing the resource created", func() {
-			expectedBody := `{"uuid":"the-uuid","content":"the-content","Translation":"the-translation"}`
+			expectedBody := `{"uuid":"the-uuid","content":"the-content","translation":"the-translation"}`
 			Expect(writer.Body.String()).To(Equal(expectedBody))
 		})
 	})

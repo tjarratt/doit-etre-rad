@@ -8,7 +8,7 @@ import (
 type PhraseResponse struct {
 	Uuid        string `json:"uuid"`
 	Content     string `json:"content"`
-	Translation string `json:translation"`
+	Translation string `json:"translation"`
 }
 
 //go:generate counterfeiter . AddPhraseUseCase

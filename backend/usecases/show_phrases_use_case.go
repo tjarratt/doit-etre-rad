@@ -32,7 +32,11 @@ func (usecase showPhrasesUseCase) Execute(request ShowPhrasesRequest) (PhrasesRe
 
 	response := []PhraseResponse{}
 	for _, phrase := range phrases {
-		response = append(response, PhraseResponse{Content: phrase.Content, Uuid: phrase.Uuid})
+		response = append(response, PhraseResponse{
+			Content: phrase.Content,
+			Uuid:    phrase.Uuid,
+			Translation: phrase.Translation,
+		})
 	}
 
 	return response, nil
