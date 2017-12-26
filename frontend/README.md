@@ -8,8 +8,9 @@ WHEN I have entered some french phrases to practice
 THEN I should be able to add translations or notes as well
 
 **Tasks**
-* refactor local storage api to send the entire phrase through (with translation, natch)
 * save updated/translated phrase to the backend as well
+  - in order to do this, make sure we send SAVED or UNSAVED phrases through local storage
+  - make sure we PUT to /api/phrases/__language__/__uuid__
 * try it out on a mobile device
 * fix hella busted layout ?
 

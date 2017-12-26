@@ -37,7 +37,6 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 -}
 
-import Css
 import Css.Helpers exposing (identifierToString)
 import Dom
 import Json.Decode as JD
@@ -385,8 +384,20 @@ update msg model =
         ReceiveFromLocalStorage ( key, value ) ->
             handleValueFromLocalStorage model key value
 
-        DidSaveToLocalStorage jsonValue ->
-            ( model, sendPhraseToBackend model.currentActivity model.userUuid jsonValue )
+        DidSaveToLocalStorage encodedPhrase ->
+            let
+                command =
+                    case JD.decodeValue LocalStorage.phraseDecoder encodedPhrase of
+                        Ok phrase ->
+                            sendPhraseToBackend
+                                model.currentActivity
+                                model.userUuid
+                                phrase
+
+                        _ ->
+                            Cmd.none
+            in
+                ( model, command )
 
         ReceiveUserUuid (Just uuidString) ->
             let
@@ -495,7 +506,7 @@ getPhrasesFromBackend currentActivity maybeUuid =
                 Http.send ReceivePhrasesFromBackend request
 
 
-sendPhraseToBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> JE.Value -> Cmd Msg
+sendPhraseToBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> Phrases.Phrase -> Cmd Msg
 sendPhraseToBackend currentActivity uuid phrase =
     case uuid of
         Nothing ->
@@ -507,7 +518,10 @@ sendPhraseToBackend currentActivity uuid phrase =
                     Uuid.toString uuid
 
                 jsonValue =
-                    JE.object [ ( "content", phrase ) ]
+                    JE.object
+                        [ ( "content", JE.string <| Phrases.toString phrase )
+                        , ( "translation", JE.string <| Phrases.translationOf phrase )
+                        ]
 
                 config =
                     { method = "POST"
@@ -589,10 +603,13 @@ startEditingMatchingPhrase model viewModel =
 persistCurrentPhrase : Model -> ( Model, Cmd Msg )
 persistCurrentPhrase model =
     let
+        newPhrase =
+            Phrases.Unsaved { content = model.wordToAdd, translation = "" }
+
         updatedModel =
             mergePhraseViewModels
                 model
-                [ Phrases.Unsaved { content = model.wordToAdd, translation = "" } ]
+                [ newPhrase ]
 
         updatedPhrases =
             List.map (\p -> p.phrase) updatedModel.phrases
@@ -612,10 +629,10 @@ persistCurrentPhrase model =
         saveInLocalStorage =
             case model.currentActivity of
                 Just EnglishToFrench ->
-                    LocalStorage.saveEnglishPhrases ( updatedPhrases, model.wordToAdd )
+                    LocalStorage.saveEnglishPhrases ( updatedPhrases, newPhrase )
 
                 Just FrenchToEnglish ->
-                    LocalStorage.saveFrenchPhrases ( updatedPhrases, model.wordToAdd )
+                    LocalStorage.saveFrenchPhrases ( updatedPhrases, newPhrase )
 
                 _ ->
                     Cmd.none
@@ -628,24 +645,22 @@ persistCurrentPhrase model =
 persistCurrentTranslation : Model -> PhraseViewModel -> ( Model, Cmd Msg )
 persistCurrentTranslation model viewModel =
     let
+        phrase =
+            viewModel.phrase
+
+        translatedPhrase =
+            Phrases.translate phrase model.currentTranslation
+
         updatedViewModel =
             List.map
-                (\viewModel ->
-                    let
-                        phrase : Phrases.Phrase
-                        phrase =
-                            viewModel.phrase
-
-                        translatedPhrase =
-                            Phrases.translate phrase model.currentTranslation
-                    in
-                        if Phrases.phraseEqual phrase viewModel.phrase then
-                            { viewModel
-                                | editing = False
-                                , phrase = translatedPhrase
-                            }
-                        else
-                            viewModel
+                (\v ->
+                    if Phrases.phraseEqual phrase v.phrase then
+                        { viewModel
+                            | editing = False
+                            , phrase = translatedPhrase
+                        }
+                    else
+                        viewModel
                 )
                 model.phrases
 
@@ -655,10 +670,10 @@ persistCurrentTranslation model viewModel =
         localStorageCommand =
             case model.currentActivity of
                 Just EnglishToFrench ->
-                    LocalStorage.saveEnglishPhrases ( phrases, "" )
+                    LocalStorage.saveEnglishPhrases ( phrases, translatedPhrase )
 
                 Just FrenchToEnglish ->
-                    LocalStorage.saveFrenchPhrases ( phrases, "" )
+                    LocalStorage.saveFrenchPhrases ( phrases, translatedPhrase )
 
                 _ ->
                     Cmd.none
@@ -688,13 +703,15 @@ mergePhraseViewModels model phrases =
         { model | phrases = phraseViewModels }
 
 
-main =
-    Html.programWithFlags
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }
+{-| Subscribes to updates from the outside world (ooh, spooky!)
+-}
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ LocalStorage.getItemResponse ReceiveFromLocalStorage
+        , LocalStorage.setItemResponse DidSaveToLocalStorage
+        , LocalStorage.getUserUuidResponse ReceiveUserUuid
+        ]
 
 
 type alias Flags =
@@ -706,12 +723,11 @@ init flags =
     ( defaultModel flags.seed, Cmd.none )
 
 
-{-| Subscribes to updates from the outside world (ooh, spooky!)
--}
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ LocalStorage.getItemResponse ReceiveFromLocalStorage
-        , LocalStorage.setItemResponse DidSaveToLocalStorage
-        , LocalStorage.getUserUuidResponse ReceiveUserUuid
-        ]
+main : Program Flags Model Msg
+main =
+    Html.programWithFlags
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }

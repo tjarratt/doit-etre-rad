@@ -10,6 +10,7 @@ port module Ports.LocalStorage
         , getUserUuidResponse
         , phraseEncoder
         , phraseDecoder
+        , savedPhraseDecoder
         )
 
 {-| This module is just a dumb wrapper around window.localStorage
@@ -27,7 +28,7 @@ port module Ports.LocalStorage
 
 # JSON supports
 
-@docs phraseEncoder, phraseDecoder
+@docs phraseEncoder, phraseDecoder, savedPhraseDecoder
 
 -}
 
@@ -39,24 +40,24 @@ import Phrases
 
 {-| a better wrapper around setItem for Phrases in french
 -}
-saveFrenchPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
+saveFrenchPhrases : ( List Phrases.Phrase, Phrases.Phrase ) -> Cmd msg
 saveFrenchPhrases args =
     savePhrases "frenchPhrases" args
 
 
 {-| a better wrapper around setItem for Phrases in english
 -}
-saveEnglishPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
+saveEnglishPhrases : ( List Phrases.Phrase, Phrases.Phrase ) -> Cmd msg
 saveEnglishPhrases args =
     savePhrases "englishPhrases" args
 
 
-savePhrases : String -> ( List Phrases.Phrase, String ) -> Cmd msg
+savePhrases : String -> ( List Phrases.Phrase, Phrases.Phrase ) -> Cmd msg
 savePhrases key ( phrases, newPhrase ) =
     setItem
         ( key
         , JE.list <| List.map phraseEncoder phrases
-        , newPhrase
+        , phraseEncoder newPhrase
         )
 
 
@@ -91,6 +92,8 @@ phraseDecoder =
         ]
 
 
+{-| a json decoder for SavedPhrases, appropriate for local storage
+-}
 savedPhraseDecoder : JD.Decoder Phrases.Phrase
 savedPhraseDecoder =
     JD.map Phrases.Saved <|
@@ -102,6 +105,8 @@ savedPhraseDecoder =
         )
 
 
+{-| a json decoder for UnsavedPhrases, appropriate for local storage
+-}
 unsavedPhraseDecoder : JD.Decoder Phrases.Phrase
 unsavedPhraseDecoder =
     JD.map Phrases.Unsaved <|
@@ -112,7 +117,7 @@ unsavedPhraseDecoder =
         )
 
 
-port setItem : ( String, JD.Value, String ) -> Cmd msg
+port setItem : ( String, JD.Value, JD.Value ) -> Cmd msg
 
 
 {-| generic response to indicate that a value has been saved to local storage

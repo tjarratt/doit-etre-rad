@@ -1,8 +1,8 @@
 module Scenarios.Shared exposing (..)
 
 import App
-import Phrases exposing (..)
 import Ports.LocalStorage as LocalStorage
+import Phrases exposing (..)
 import Elmer exposing (atIndex, hasLength, (<&&>))
 import Elmer.Html as Markup
 import Elmer.Html.Event as Event
@@ -10,16 +10,11 @@ import Elmer.Html.Matchers exposing (element, elements, hasClass, hasText, hasAt
 import Elmer.Http
 import Elmer.Http.Matchers exposing (..)
 import Elmer.Http.Route
-import Elmer.Http.Stub
 import Elmer.Platform.Subscription as Subscription
-import Elmer.Platform.Command as Command
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (wasCalled, wasCalledWith, stringArg)
-import Expect
-import Json.Decode as JD
 import Json.Encode as JE
 import Scenarios exposing (..)
-import Scenarios.Shared.Http exposing (..)
 import Scenarios.Shared.Spies exposing (..)
 import Test exposing (..)
 
@@ -391,11 +386,16 @@ userUuidTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" Nothing
-                    |> Subscription.send "savedToLocalStorageEffect" (JE.string "anana qui parle")
+                    |> Subscription.send "savedToLocalStorageEffect" encodedPhrase
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post setup.expectedEndpoint)
                         (Elmer.each <|
                             hasHeader ( "X-User-Token", uuidForSeed )
-                                <&&> hasBody "{\"content\":\"anana qui parle\"}"
+                                <&&> hasBody "{\"content\":\"anana qui parle\",\"translation\":\"\"}"
                         )
         ]
+
+
+encodedPhrase : JE.Value
+encodedPhrase =
+    (LocalStorage.phraseEncoder <| Unsaved { content = "anana qui parle", translation = "" })
