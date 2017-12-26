@@ -40,20 +40,21 @@ import Phrases
 {-| a better wrapper around setItem for Phrases in french
 -}
 saveFrenchPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
-saveFrenchPhrases ( phrases, newPhrase ) =
-    setItem
-        ( "frenchPhrases"
-        , JE.list <| List.map phraseEncoder phrases
-        , newPhrase
-        )
+saveFrenchPhrases args =
+    savePhrases "frenchPhrases" args
 
 
 {-| a better wrapper around setItem for Phrases in english
 -}
 saveEnglishPhrases : ( List Phrases.Phrase, String ) -> Cmd msg
-saveEnglishPhrases ( phrases, newPhrase ) =
+saveEnglishPhrases args =
+    savePhrases "englishPhrases" args
+
+
+savePhrases : String -> ( List Phrases.Phrase, String ) -> Cmd msg
+savePhrases key ( phrases, newPhrase ) =
     setItem
-        ( "englishPhrases"
+        ( key
         , JE.list <| List.map phraseEncoder phrases
         , newPhrase
         )
