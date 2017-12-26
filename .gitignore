@@ -10,3 +10,6 @@ tmp
 
 # local development logs
 logs
+
+# ide specific directories
+.idea
