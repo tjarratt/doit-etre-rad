@@ -36,6 +36,7 @@ popd # done with frontend
 
 # installing backend items
 brew install go
+brew install nginx
 
 pushd backend
 go get -u ./... 
