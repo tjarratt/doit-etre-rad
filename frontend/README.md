@@ -8,10 +8,9 @@ WHEN I have entered some french phrases to practice
 THEN I should be able to add translations or notes as well
 
 **Tasks**
-* "enter" key in textfield should submit translation
 * deploy and try it out on a mobile device
 * fix hella busted layout ?
-* rebuild source on save
+* rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
 * try out elm test watch ?
 
 -----

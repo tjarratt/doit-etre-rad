@@ -256,20 +256,26 @@ backViewForPhrase model viewModel =
             else
                 "Edit"
     in
-        Html.div [ class [ IndexCss.CardBack ] ]
-            [ Html.div [] [ viewForPhraseTranslationText model viewModel ]
-            , Html.button
-                [ class [ IndexCss.AddTranslationButton ]
-                , Html.Events.onClick <| buttonAction
-                , Html.Attributes.class "btn btn-default"
+        Html.div
+            [ class [ IndexCss.CardBack ] ]
+            [ Html.form
+                [ Html.Attributes.action "javascript:void(0)" ]
+                [ viewForPhraseTranslationText model viewModel
+                , Html.div []
+                    [ Html.button
+                        [ class [ IndexCss.AddTranslationButton ]
+                        , Html.Events.onClick <| buttonAction
+                        , Html.Attributes.class "btn btn-default"
+                        ]
+                        [ Html.text buttonText ]
+                    , Html.button
+                        [ class [ IndexCss.CancelTranslationButton ]
+                        , Html.Events.onClick <| FlipPhraseCard viewModel
+                        , Html.Attributes.class "btn btn-default"
+                        ]
+                        [ Html.text "Cancel" ]
+                    ]
                 ]
-                [ Html.text buttonText ]
-            , Html.button
-                [ class [ IndexCss.CancelTranslationButton ]
-                , Html.Events.onClick <| FlipPhraseCard viewModel
-                , Html.Attributes.class "btn btn-default"
-                ]
-                [ Html.text "Cancel" ]
             ]
 
 
