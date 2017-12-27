@@ -10,14 +10,6 @@ import Elmer.Http.Stub
 import Elmer.Spy exposing (Spy)
 
 
-httpSpies : String -> String -> String -> Spy
-httpSpies endpoint phrase savedPhrase =
-    Elmer.Http.serve
-        [ stubbedGetResponse endpoint savedPhrase
-        , stubbedPostResponse endpoint phrase
-        ]
-
-
 offlineSpies : String -> String -> String -> Spy
 offlineSpies endpoint phrase1 phrase2 =
     Elmer.Http.serve
@@ -56,6 +48,20 @@ stubbedPostResponse endpoint phrase =
                         , translation = ""
                         }
                     )
+                )
+            )
+
+
+stubbedPutResponse : String -> ( String, String, String ) -> Elmer.Http.HttpResponseStub
+stubbedPutResponse endpoint ( uuid, phrase, translation ) =
+    Elmer.Http.Stub.for (Elmer.Http.Route.put <| endpoint ++ "/" ++ uuid)
+        |> Elmer.Http.Stub.withBody
+            (JE.encode 0
+                (JE.object
+                    [ ( "uuid", JE.string uuid )
+                    , ( "content", JE.string phrase )
+                    , ( "translation", JE.string translation )
+                    ]
                 )
             )
 

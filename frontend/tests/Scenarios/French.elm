@@ -26,6 +26,6 @@ saveFrenchPhrasesSpy =
         |> Elmer.Spy.andCallFake (\_ -> Cmd.none)
 
 
-withFrenchSettings : (String -> String -> String -> List Elmer.Spy.Spy) -> List Elmer.Spy.Spy
+withFrenchSettings : (String -> ( String, String, String ) -> String -> List Elmer.Spy.Spy) -> List Elmer.Spy.Spy
 withFrenchSettings spyProducer =
-    spyProducer "/api/phrases/french" "c'est simple" "bonjour"
+    spyProducer "/api/phrases/french" ( "the-uuid", "c'est simple", "it's simple" ) "bonjour"

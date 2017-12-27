@@ -36,16 +36,17 @@ addPhraseToPractice phrase testState =
         |> Event.input phrase
         |> Markup.target "#add-word button"
         |> Event.click
-        |> Subscription.send "savedToLocalStorageEffect" (mockedSaveItemResponse phrase)
+        |> Subscription.send "savedToLocalStorageEffect" (unsavedLocalStorageResponse phrase)
 
 
-addTranslation translation testState =
+addTranslation uuid phrase translation testState =
     -- adds the given translation to the FIRST phrase in the list
     testState
         |> clickPhrase
         |> editPhrase
         |> typeTranslation translation
         |> saveTranslation
+        |> Subscription.send "savedToLocalStorageEffect" (savedLocalStorageResponse uuid phrase translation)
 
 
 clickPhrase testState =
@@ -72,7 +73,13 @@ saveTranslation testState =
         |> Event.click
 
 
-mockedSaveItemResponse : String -> JE.Value
-mockedSaveItemResponse phrase =
+unsavedLocalStorageResponse : String -> JE.Value
+unsavedLocalStorageResponse phrase =
     LocalStorage.phraseEncoder <|
         Unsaved { content = phrase, translation = "" }
+
+
+savedLocalStorageResponse : String -> String -> String -> JE.Value
+savedLocalStorageResponse uuid phrase translation =
+    LocalStorage.phraseEncoder <|
+        Saved { uuid = uuid, content = phrase, translation = translation }

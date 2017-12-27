@@ -7,7 +7,9 @@ import Elmer.Spy
 
 type alias TestSetup =
     { allSpies : List Elmer.Spy.Spy
-    , expectedEndpoint : String
+    , readEndpoint : String
+    , createEndpoint : String
+    , updateEndpoint : String -> String
     , expectedTitle : String
     , getItemSpyName : String
     , inputPhrase1 : String

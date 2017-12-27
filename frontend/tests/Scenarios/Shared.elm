@@ -109,10 +109,10 @@ practiceActivityTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> addPhraseToPractice setup.inputPhrase1
                     |> Elmer.Http.expectThat
-                        (Elmer.Http.Route.post setup.expectedEndpoint)
+                        (Elmer.Http.Route.post setup.createEndpoint)
                         (wasRequested 1)
         , test "offline tooltips are hidden after the word is saved to the backend" <|
             \() ->
@@ -189,7 +189,7 @@ addingTranslationsTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> addTranslation setup.inputTranslation1
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
                     |> Spy.expect setup.localStorageSpyName (wasCalled 1)
         , test "it should flip the card back over" <|
             \() ->
@@ -197,20 +197,58 @@ addingTranslationsTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> addTranslation setup.inputTranslation1
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     -- assert no card is flipped
                     |> Markup.target ".indexFlip"
                     |> Markup.expect
                         (elements <| hasLength 0)
+        , test "it should save the translation to the backend, after it saves in local storage" <|
+            \() ->
+                Elmer.given exactlyOnePhraseSaved App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> Subscription.send "userUuidResponseEffect" Nothing
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
+                    |> Elmer.Http.expectThat
+                        (Elmer.Http.Route.put <| setup.updateEndpoint "the-uuid")
+                        (Elmer.each <|
+                            hasHeader ( "X-User-Token", uuidForSeed )
+                                <&&>
+                                    hasBody
+                                        (JE.encode 0
+                                            (JE.object
+                                                [ ( "uuid", JE.string "the-uuid" )
+                                                , ( "content", JE.string setup.inputPhrase1 )
+                                                , ( "translation", JE.string setup.inputTranslation1 )
+                                                ]
+                                            )
+                                        )
+                        )
+        , test "the list of phrases is visible again after you translate one" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use setup.allSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> setup.startActivityScenario
+                    |> addPhraseToPractice setup.inputPhrase1
+                    |> addPhraseToPractice setup.inputPhrase2
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
+                    |> Markup.target "#PhraseList"
+                    |> Markup.expect
+                        (element <|
+                            hasText setup.inputPhrase1
+                                <&&> hasText setup.inputPhrase2
+                        )
         , test "it should show the translation if you inspect the card again" <|
             \() ->
                 Elmer.given exactlyOnePhraseSaved App.view App.update
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> addTranslation setup.inputTranslation1
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> clickPhrase
                     |> Markup.expect (element <| hasText setup.inputTranslation1)
         , test "it should pre-fill the input when you edit a translation" <|
@@ -219,8 +257,8 @@ addingTranslationsTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> addTranslation setup.inputTranslation1
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> addTranslation "the-uuid" setup.inputPhrase1 setup.inputTranslation1
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> clickPhrase
                     |> editPhrase
                     |> Markup.target ".indexPhraseListItem .indexFlip input"
@@ -231,7 +269,7 @@ addingTranslationsTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> addTranslation ""
+                    |> addTranslation "the-uuid" setup.inputPhrase1 ""
                     |> Markup.target ".indexPhraseListItem .indexAddTranslationButton"
                     |> Event.click
                     |> Spy.expect setup.localStorageSpyName (wasCalled 0)
@@ -258,7 +296,7 @@ renderingPhrasesTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <|
@@ -275,7 +313,7 @@ renderingPhrasesTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> Markup.target "#PhraseList li"
                     |> Markup.expect
                         (elements <|
@@ -313,7 +351,7 @@ offlineTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> addPhraseToPractice "hors ligne"
                     |> Spy.expect "bootstrapTooltips"
                         (wasCalled 3)
@@ -323,7 +361,7 @@ offlineTests setup =
                     |> Spy.use setup.allSpies
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> Markup.target "#PhraseList li:first-child .indexOfflineIndicator"
                     |> Markup.expect
                         (element <| hasClass "glyphicon-exclamation-sign")
@@ -334,7 +372,7 @@ offlineTests setup =
                     |> Subscription.with (\() -> App.subscriptions)
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
-                    |> Subscription.send "itemResponseEffect" (getItemResponse setup.getItemSpyName)
+                    |> Subscription.send "getItemResponseEffect" (getItemResponse setup.getItemSpyName)
                     |> Spy.expect "bootstrapTooltips"
                         (wasCalled 2)
         ]
@@ -358,7 +396,7 @@ userUuidTests setup =
                     |> setup.startActivityScenario
                     |> Subscription.send "userUuidResponseEffect" (Just "941ee33c-725d-45f7-b6a7-908b3d1a2437")
                     |> Elmer.Http.expectThat
-                        (Elmer.Http.Route.get setup.expectedEndpoint)
+                        (Elmer.Http.Route.get setup.readEndpoint)
                         (Elmer.each <| hasHeader ( "X-User-Token", "941ee33c-725d-45f7-b6a7-908b3d1a2437" ))
         , test "it saves the uuid to local storage" <|
             \() ->
@@ -380,7 +418,7 @@ userUuidTests setup =
                     |> Subscription.send "userUuidResponseEffect" Nothing
                     |> Subscription.send "savedToLocalStorageEffect" encodedPhrase
                     |> Elmer.Http.expectThat
-                        (Elmer.Http.Route.post setup.expectedEndpoint)
+                        (Elmer.Http.Route.post setup.createEndpoint)
                         (Elmer.each <|
                             hasHeader ( "X-User-Token", uuidForSeed )
                                 <&&> hasBody "{\"content\":\"anana qui parle\",\"translation\":\"\"}"

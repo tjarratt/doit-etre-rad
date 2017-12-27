@@ -30,16 +30,17 @@ sharedSpies =
     ]
 
 
-allOfflineSpies : String -> String -> String -> List Spy
-allOfflineSpies endpoint phrase1 phrase2 =
+allOfflineSpies : String -> ( String, String, String ) -> String -> List Spy
+allOfflineSpies endpoint ( _, phrase1, _ ) phrase2 =
     (offlineSpies endpoint phrase1 phrase2) :: sharedSpies
 
 
-allHttpSpies : String -> String -> String -> List Spy
-allHttpSpies endpoint newPhrase savedPhrase =
+allHttpSpies : String -> ( String, String, String ) -> String -> List Spy
+allHttpSpies endpoint ( uuid, newPhrase, translation ) savedPhrase =
     Elmer.Http.serve
         [ stubbedGetResponse endpoint savedPhrase
         , stubbedPostResponse endpoint newPhrase
+        , stubbedPutResponse endpoint ( uuid, newPhrase, translation )
         ]
         :: sharedSpies
 
@@ -60,7 +61,7 @@ getItemResponseSpy : Spy
 getItemResponseSpy =
     Spy.create "getItemResponse" (\_ -> LocalStorage.getItemResponse)
         |> andCallFake
-            (\tagger -> Subscription.fake "itemResponseEffect" tagger)
+            (\tagger -> Subscription.fake "getItemResponseEffect" tagger)
 
 
 getItemResponse : String -> ( String, Maybe JD.Value )

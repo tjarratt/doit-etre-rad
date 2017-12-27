@@ -58,8 +58,10 @@ import Uuid
 import UuidGenerator
 
 
---- App supports multiple activities
---- it is nice to know which the user is currently doing
+-- App supports multiple activities
+-- translating from english to french
+-- translating from french to english
+-- differentiating similar, but different words
 
 
 type TranslationActivity
@@ -68,7 +70,7 @@ type TranslationActivity
     | DifferentiateFrenchWords
 
 
-{-| Reprenents all of the state changes in the app
+{-| Represents all of the state changes in the application
 -}
 type Msg
     = Noop
@@ -496,7 +498,7 @@ getPhrasesFromBackend currentActivity maybeUuid =
                 config =
                     { method = "GET"
                     , headers = headers
-                    , url = urlForCurrentActivity currentActivity
+                    , url = readUrlForCurrentActivity currentActivity
                     , body = Http.emptyBody
                     , expect = expect
                     , timeout = Nothing
@@ -520,16 +522,36 @@ sendPhraseToBackend currentActivity uuid phrase =
                 uuidStr =
                     Uuid.toString uuid
 
+                method =
+                    case phrase of
+                        Phrases.Saved _ ->
+                            "PUT"
+
+                        Phrases.Unsaved _ ->
+                            "POST"
+
+                endpoint =
+                    urlForCurrentActivityAndPhrase currentActivity phrase
+
                 jsonValue =
-                    JE.object
-                        [ ( "content", JE.string <| Phrases.toString phrase )
-                        , ( "translation", JE.string <| Phrases.translationOf phrase )
-                        ]
+                    case phrase of
+                        Phrases.Saved p ->
+                            JE.object
+                                [ ( "uuid", JE.string p.uuid )
+                                , ( "content", JE.string p.content )
+                                , ( "translation", JE.string p.translation )
+                                ]
+
+                        Phrases.Unsaved p ->
+                            JE.object
+                                [ ( "content", JE.string p.content )
+                                , ( "translation", JE.string p.translation )
+                                ]
 
                 config =
-                    { method = "POST"
+                    { method = method
                     , headers = [ Http.header "X-User-Token" uuidStr ]
-                    , url = urlForCurrentActivity currentActivity
+                    , url = endpoint
                     , body = Http.jsonBody jsonValue
                     , expect = Http.expectJson savedPhraseDecoder
                     , timeout = Nothing
@@ -542,8 +564,22 @@ sendPhraseToBackend currentActivity uuid phrase =
                 Http.send ReceivePhraseFromBackend request
 
 
-urlForCurrentActivity : Maybe TranslationActivity -> String
-urlForCurrentActivity currentActivity =
+urlForCurrentActivityAndPhrase : Maybe TranslationActivity -> Phrases.Phrase -> String
+urlForCurrentActivityAndPhrase currentActivity phrase =
+    let
+        baseURL =
+            baseUrlForCurrentActivity currentActivity
+    in
+        case phrase of
+            Phrases.Saved p ->
+                baseURL ++ "/" ++ p.uuid
+
+            Phrases.Unsaved _ ->
+                baseURL
+
+
+baseUrlForCurrentActivity : Maybe TranslationActivity -> String
+baseUrlForCurrentActivity currentActivity =
     case currentActivity of
         Just EnglishToFrench ->
             "/api/phrases/english"
@@ -553,6 +589,11 @@ urlForCurrentActivity currentActivity =
 
         _ ->
             "/api/phrases/whoops"
+
+
+readUrlForCurrentActivity : Maybe TranslationActivity -> String
+readUrlForCurrentActivity currentActivity =
+    baseUrlForCurrentActivity currentActivity
 
 
 savedPhraseDecoder : JD.Decoder Phrases.SavedPhrase
@@ -658,12 +699,12 @@ persistCurrentTranslation model viewModel =
             List.map
                 (\v ->
                     if Phrases.phraseEqual phrase v.phrase then
-                        { viewModel
+                        { v
                             | editing = False
                             , phrase = translatedPhrase
                         }
                     else
-                        viewModel
+                        v
                 )
                 model.phrases
 
