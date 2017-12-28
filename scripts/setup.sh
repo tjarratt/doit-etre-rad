@@ -23,6 +23,7 @@ npm install -g elm-test
 npm install -g elm-format
 npm install -g elm-oracle
 npm install -g elm-github-install
+npm install -g postcss-cli autoprefixer
 
 # install elm github-only-dependencies (e.g.: Elmer)
 pushd tests
