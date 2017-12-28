@@ -89,6 +89,22 @@ type Msg
     | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
 
 
+
+{-
+   AddPhraseMsg
+   =================
+   TypePhraseUpdate
+   AddPhraseToPracice
+
+   PhraseCardMsg
+   ================
+   FlipPhraseCard
+   StartEditingTranslation
+   TypeTranslationUpdate
+   AddTranslationToPhrase
+-}
+
+
 {-| Represents the current state of the application
 -}
 type alias Model =
@@ -98,8 +114,18 @@ type alias Model =
     , wordToAdd : String
     , currentTranslation : String
     , phrases : List PhraseViewModel
-    , errors : Int
     }
+
+
+
+{-
+   currentActivity + useruuid ...
+   userUuid Maybe or ...
+
+   wordToAdd belongs on an AddPhrase "component"
+
+   currentTranslation belongs on a "PhraseCard" component
+-}
 
 
 type alias PhraseViewModel =
@@ -119,7 +145,6 @@ defaultModel seed =
     , wordToAdd = ""
     , currentTranslation = ""
     , phrases = []
-    , errors = 0
     }
 
 
