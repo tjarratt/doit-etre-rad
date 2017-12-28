@@ -9,6 +9,7 @@ THEN I should be able to add translations or notes as well
 
 **Tasks**
 * deploy and try it out on a mobile device
+* add an admin site so I can see user uuids and phrase count (leaderboard)
 * fix hella busted layout ?
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
 * try out elm test watch ?

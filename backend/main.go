@@ -45,6 +45,9 @@ func main() {
 	englishUpdateHandler := UpdatePhraseHandler(englishPhraseRepository)
 	router.Handle("/api/phrases/english/{uuid}", englishUpdateHandler).Methods("PUT")
 
+	adminHandler := AdminHandler(api.NewAdminRepository(db))
+	router.Handle("/api/admin", adminHandler).Methods("GET")
+
 	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
 	port := app.Port
@@ -80,5 +83,14 @@ func ShowPhrasesHandler(repo api.PhrasesRepository) http.Handler {
 	return httpserver.NewShowPhrasesHandler(
 		usecases.NewShowPhrasesUseCase(repo),
 		httpserver.NewShowPhrasesParamReader(),
+	)
+}
+
+func AdminHandler(repo api.AdminRepository) http.Handler {
+	password := os.Getenv("REALLY_CLEVER_PASSWORD")
+
+	return httpserver.NewAdminHandler(
+		repo,
+		password,
 	)
 }

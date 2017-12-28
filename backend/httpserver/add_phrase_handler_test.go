@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NewAddPhraseHandler", func() {
+var _ = Describe("AddPhraseHandler", func() {
 	var subject AddPhraseHandler
 
 	var useCase *usecasesfakes.FakeAddPhraseUseCase
