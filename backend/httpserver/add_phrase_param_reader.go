@@ -3,7 +3,6 @@ package httpserver
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -32,28 +31,28 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 ) (AddPhraseParams, error) {
 	tokens, ok := request.Header["X-User-Token"]
 	if !ok {
-		return AddPhraseParams{}, errors.New(`{"err": "You done goofed; I'm pretty sure you didn't authenticate"}`)
+		return AddPhraseParams{}, errors.New("you done goofed; I'm pretty sure you didn't authenticate")
 	}
 
 	userUuid, err := uuid.Parse(tokens[0])
 	if err != nil {
-		return AddPhraseParams{}, wrap(err)
+		return AddPhraseParams{}, err
 	}
 
 	bodyStr, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return AddPhraseParams{}, wrap(err)
+		return AddPhraseParams{}, err
 	}
 
 	requestObj := map[string]string{}
 	err = json.Unmarshal(bodyStr, &requestObj)
 	if err != nil {
-		return AddPhraseParams{}, wrap(err)
+		return AddPhraseParams{}, err
 	}
 
 	content, ok := requestObj["content"]
 	if !ok {
-		return AddPhraseParams{}, errors.New(`{"err": "Could not read phrase from request body"}`)
+		return AddPhraseParams{}, errors.New("could not read phrase from request body")
 	}
 
 	translation, ok := requestObj["translation"]
@@ -66,8 +65,4 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 		Translation: translation,
 		UserUUID:    userUuid,
 	}, nil
-}
-
-func wrap(err error) error {
-	return errors.New(fmt.Sprintf(`{"err": "%s"}`, err.Error()))
 }
