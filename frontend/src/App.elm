@@ -64,7 +64,7 @@ import UuidGenerator
 -- differentiating similar, but different words
 
 
-type TranslationActivity
+type Activity
     = FrenchToEnglish
     | EnglishToFrench
     | DifferentiateFrenchWords
@@ -110,7 +110,7 @@ type Msg
 type alias Model =
     { userUuid : Maybe Uuid.Uuid
     , currentSeed : Seed
-    , currentActivity : Maybe TranslationActivity
+    , currentActivity : Maybe Activity
     , wordToAdd : String
     , currentTranslation : String
     , phrases : List PhraseViewModel
@@ -369,7 +369,7 @@ addWordForm placeholder model =
         ]
 
 
-inputLabel : Maybe TranslationActivity -> String
+inputLabel : Maybe Activity -> String
 inputLabel currentActivity =
     case currentActivity of
         Just EnglishToFrench ->
@@ -483,7 +483,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-startActivity : TranslationActivity -> String -> Model -> ( Model, Cmd msg )
+startActivity : Activity -> String -> Model -> ( Model, Cmd msg )
 startActivity activity localStorageKey model =
     ( { model | currentActivity = Just activity }
     , Cmd.batch
@@ -509,7 +509,7 @@ handleValueFromLocalStorage model key maybeValue =
             ( model, Cmd.none )
 
 
-getPhrasesFromBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> Cmd Msg
+getPhrasesFromBackend : Maybe Activity -> Maybe Uuid.Uuid -> Cmd Msg
 getPhrasesFromBackend currentActivity maybeUuid =
     case maybeUuid of
         Nothing ->
@@ -542,7 +542,7 @@ getPhrasesFromBackend currentActivity maybeUuid =
                 Http.send ReceivePhrasesFromBackend request
 
 
-sendPhraseToBackend : Maybe TranslationActivity -> Maybe Uuid.Uuid -> Phrases.Phrase -> Cmd Msg
+sendPhraseToBackend : Maybe Activity -> Maybe Uuid.Uuid -> Phrases.Phrase -> Cmd Msg
 sendPhraseToBackend currentActivity uuid phrase =
     case uuid of
         Nothing ->
@@ -595,7 +595,7 @@ sendPhraseToBackend currentActivity uuid phrase =
                 Http.send ReceivePhraseFromBackend request
 
 
-urlForCurrentActivityAndPhrase : Maybe TranslationActivity -> Phrases.Phrase -> String
+urlForCurrentActivityAndPhrase : Maybe Activity -> Phrases.Phrase -> String
 urlForCurrentActivityAndPhrase currentActivity phrase =
     let
         baseURL =
@@ -609,7 +609,7 @@ urlForCurrentActivityAndPhrase currentActivity phrase =
                 baseURL
 
 
-baseUrlForCurrentActivity : Maybe TranslationActivity -> String
+baseUrlForCurrentActivity : Maybe Activity -> String
 baseUrlForCurrentActivity currentActivity =
     case currentActivity of
         Just EnglishToFrench ->
@@ -622,7 +622,7 @@ baseUrlForCurrentActivity currentActivity =
             "/api/phrases/whoops"
 
 
-readUrlForCurrentActivity : Maybe TranslationActivity -> String
+readUrlForCurrentActivity : Maybe Activity -> String
 readUrlForCurrentActivity currentActivity =
     baseUrlForCurrentActivity currentActivity
 
