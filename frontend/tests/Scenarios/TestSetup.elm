@@ -19,5 +19,5 @@ type alias TestSetup =
     , localStorageSpyName : String
     , savedPhrase : String
     , startActivityScenario :
-        Elmer.TestState App.Model App.Msg -> Elmer.TestState App.Model App.Msg
+        Elmer.TestState App.ApplicationState App.Msg -> Elmer.TestState App.ApplicationState App.Msg
     }

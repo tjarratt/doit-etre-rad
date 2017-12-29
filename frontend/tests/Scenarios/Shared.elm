@@ -20,12 +20,12 @@ import Scenarios.TestSetup exposing (TestSetup)
 import Test exposing (..)
 
 
-defaultModel : App.Model
+defaultModel : App.ApplicationState
 defaultModel =
     App.defaultModel 0
 
 
-exactlyOnePhraseSaved : App.Model
+exactlyOnePhraseSaved : App.ApplicationState
 exactlyOnePhraseSaved =
     { defaultModel
         | phrases =

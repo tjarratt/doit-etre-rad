@@ -1,6 +1,6 @@
 module App
     exposing
-        ( Model
+        ( ApplicationState
         , Msg
         , defaultModel
         , view
@@ -14,7 +14,7 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 # global application state
 
-@docs Model, Msg
+@docs ApplicationState, Msg
 
 
 # initial application state
@@ -113,7 +113,7 @@ type Msg
 
 {-| Represents the current state of the application
 -}
-type alias Model =
+type alias ApplicationState =
     { userUuid : Maybe Uuid.Uuid
     , currentSeed : Seed
     , currentActivity : Maybe Activity
@@ -147,7 +147,7 @@ type alias PhraseViewModel =
 
 {-| Represents the initial state of the application
 -}
-defaultModel : Int -> Model
+defaultModel : Int -> ApplicationState
 defaultModel seed =
     { userUuid = Nothing
     , currentSeed = initialSeed seed
@@ -165,7 +165,7 @@ defaultModel seed =
 
 {-| Returns the HTMl to be rendered based on the current application state
 -}
-view : Model -> Html Msg
+view : ApplicationState -> Html Msg
 view model =
     case model.currentActivity of
         Nothing ->
@@ -218,7 +218,7 @@ landingPageButton =
         [ Html.text "shh..." ]
 
 
-phraseListView : Model -> List PhraseViewModel -> Html Msg
+phraseListView : ApplicationState -> List PhraseViewModel -> Html Msg
 phraseListView model phrases =
     Html.ul
         [ id IndexCss.PhraseList ]
@@ -230,7 +230,7 @@ phraseListView model phrases =
             phrases
 
 
-viewForPhrase : Model -> PhraseViewModel -> Html Msg
+viewForPhrase : ApplicationState -> PhraseViewModel -> Html Msg
 viewForPhrase model phrase =
     let
         buttonAction =
@@ -290,7 +290,7 @@ frontViewForPhrase viewModel =
         ]
 
 
-backViewForPhrase : Model -> PhraseViewModel -> Html Msg
+backViewForPhrase : ApplicationState -> PhraseViewModel -> Html Msg
 backViewForPhrase model viewModel =
     let
         buttonAction =
@@ -328,7 +328,7 @@ backViewForPhrase model viewModel =
             ]
 
 
-viewForPhraseTranslationText : Model -> PhraseViewModel -> Html Msg
+viewForPhraseTranslationText : ApplicationState -> PhraseViewModel -> Html Msg
 viewForPhraseTranslationText model viewModel =
     if viewModel.editing then
         Html.input
@@ -360,7 +360,7 @@ offlineModeTooltip =
     "This phrase is saved locally, but has not been saved to our server."
 
 
-addWordForm : String -> Model -> Html Msg
+addWordForm : String -> ApplicationState -> Html Msg
 addWordForm placeholder model =
     Html.form
         [ Html.Attributes.action "javascript:void(0)"
@@ -408,7 +408,7 @@ inputLabel currentActivity =
 
 {-| Modifies application state in response to messages from components
 -}
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> ApplicationState -> ( ApplicationState, Cmd Msg )
 update msg model =
     case msg of
         PracticeFrenchPhrases ->
@@ -519,7 +519,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-startActivity : Activity -> String -> Model -> ( Model, Cmd msg )
+startActivity : Activity -> String -> ApplicationState -> ( ApplicationState, Cmd msg )
 startActivity activity localStorageKey model =
     ( { model | currentActivity = Just activity }
     , Cmd.batch
@@ -530,7 +530,7 @@ startActivity activity localStorageKey model =
     )
 
 
-handleValueFromLocalStorage : Model -> String -> Maybe JE.Value -> ( Model, Cmd msg )
+handleValueFromLocalStorage : ApplicationState -> String -> Maybe JE.Value -> ( ApplicationState, Cmd msg )
 handleValueFromLocalStorage model key maybeValue =
     case ( key, maybeValue ) of
         ( _, Just value ) ->
@@ -671,7 +671,7 @@ savedPhraseDecoder =
         (JD.field "translation" JD.string)
 
 
-flipCardMatchingPhrase : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+flipCardMatchingPhrase : ApplicationState -> PhraseViewModel -> ( ApplicationState, Cmd Msg )
 flipCardMatchingPhrase model viewModel =
     let
         updatedViewModel =
@@ -687,7 +687,7 @@ flipCardMatchingPhrase model viewModel =
         ( { model | phrases = updatedViewModel }, Cmd.none )
 
 
-startEditingMatchingPhrase : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+startEditingMatchingPhrase : ApplicationState -> PhraseViewModel -> ( ApplicationState, Cmd Msg )
 startEditingMatchingPhrase model viewModel =
     let
         updatedViewModel =
@@ -711,7 +711,7 @@ startEditingMatchingPhrase model viewModel =
         )
 
 
-persistCurrentPhrase : Model -> ( Model, Cmd Msg )
+persistCurrentPhrase : ApplicationState -> ( ApplicationState, Cmd Msg )
 persistCurrentPhrase model =
     let
         newPhrase =
@@ -753,7 +753,7 @@ persistCurrentPhrase model =
         )
 
 
-persistCurrentTranslation : Model -> PhraseViewModel -> ( Model, Cmd Msg )
+persistCurrentTranslation : ApplicationState -> PhraseViewModel -> ( ApplicationState, Cmd Msg )
 persistCurrentTranslation model viewModel =
     let
         phrase =
@@ -797,7 +797,7 @@ persistCurrentTranslation model viewModel =
         )
 
 
-mergePhraseViewModels : Model -> List Phrases.Phrase -> Model
+mergePhraseViewModels : ApplicationState -> List Phrases.Phrase -> ApplicationState
 mergePhraseViewModels model phrases =
     let
         existingPhrases =
@@ -816,7 +816,7 @@ mergePhraseViewModels model phrases =
 
 {-| Subscribes to updates from the outside world (ooh, spooky!)
 -}
-subscriptions : Model -> Sub Msg
+subscriptions : ApplicationState -> Sub Msg
 subscriptions model =
     Sub.batch
         [ LocalStorage.getItemResponse ReceiveFromLocalStorage
@@ -829,12 +829,12 @@ type alias Flags =
     { seed : Int }
 
 
-init : Flags -> ( Model, Cmd Msg )
+init : Flags -> ( ApplicationState, Cmd Msg )
 init flags =
     ( defaultModel flags.seed, Cmd.none )
 
 
-main : Program Flags Model Msg
+main : Program Flags ApplicationState Msg
 main =
     Html.programWithFlags
         { init = init
