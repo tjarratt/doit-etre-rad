@@ -31,6 +31,7 @@ type CssIds
     | AdminSection
     | Leaderboard
     | PasswordField
+    | Errors
 
 
 css : Css.Stylesheet

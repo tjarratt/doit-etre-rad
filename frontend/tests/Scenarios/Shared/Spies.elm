@@ -3,6 +3,7 @@ module Scenarios.Shared.Spies
         ( allOfflineSpies
         , allHttpSpies
         , adminSpies
+        , adminErrorCaseSpies
         , getItemResponse
         , uuidForSeed
         )
@@ -21,6 +22,7 @@ import Elmer.Platform.Command as Command
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Http
 import Elmer.Http.Route
+import Elmer.Http.Status exposing (unauthorized)
 import Elmer.Http.Stub
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Scenarios.Shared.Http exposing (..)
@@ -60,6 +62,17 @@ adminSpies =
     [ Elmer.Http.serve
         [ Elmer.Http.Stub.for (Elmer.Http.Route.get Urls.adminApiUrl)
             |> Elmer.Http.Stub.withBody """[{"userUuid": "the-uuid", "phraseCount": 11}]"""
+        ]
+    ]
+
+
+adminErrorCaseSpies : List Spy
+adminErrorCaseSpies =
+    [ Elmer.Http.serve
+        [ Elmer.Http.Stub.for (Elmer.Http.Route.get Urls.adminApiUrl)
+            |> Elmer.Http.Stub.withBody """{"error": "ah ah ah you didn't say the magic word"}"""
+
+        -- |> Elmer.Http.Stub.withStatus unauthorized
         ]
     ]
 

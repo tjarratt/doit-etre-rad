@@ -15,7 +15,7 @@ import Scenarios exposing (..)
 import Scenarios.French exposing (..)
 import Scenarios.English exposing (..)
 import Scenarios.Shared exposing (..)
-import Scenarios.Shared.Spies exposing (adminSpies)
+import Scenarios.Shared.Spies exposing (adminSpies, adminErrorCaseSpies)
 import Scenarios.TestSetup exposing (TestSetup)
 
 
@@ -127,6 +127,20 @@ leaderboardTests =
                             (atIndex 0 <| hasText "the-uuid")
                                 <&&> (atIndex 0 <| hasText "11")
                         )
+        , test "it should display an error message when the request fails" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use adminErrorCaseSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Markup.target "#SecretButton"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #PasswordField"
+                    |> Event.input "whoops i accidentally all the things"
+                    |> Markup.target "#AdminSection button"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #Errors"
+                    |> Markup.expect
+                        (element <| hasText "ah ah ah you didn't say the magic word")
         ]
 
 

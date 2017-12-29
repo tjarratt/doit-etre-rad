@@ -5,10 +5,12 @@
     "license": "MIT",
     "source-directories": [
         "src",
+        "src/Leaderboard",
         "src/Ports"
     ],
     "exposed-modules": [
         "App",
+        "Leaderboard",
         "Ports",
         "Ports.LocalStorage"
     ],

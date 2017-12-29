@@ -15,8 +15,13 @@ import IndexCss
 import Html
 import Html.Attributes
 import Http
-import Leaderboard.JSON exposing (LeaderboardItem, leaderboardItemDecoder)
-import Json.Decode as JD
+import Leaderboard.JSON
+    exposing
+        ( Error
+        , LeaderboardItem
+        , LeaderboardResult(..)
+        , decoder
+        )
 import Urls exposing (adminApiUrl)
 
 
@@ -24,11 +29,11 @@ type Msg
     = Noop
     | TypePassword String
     | RequestToBackend
-    | ReceiveFromBackend (Result Http.Error (List LeaderboardItem))
+    | ReceiveFromBackend (Result Http.Error LeaderboardResult)
 
 
 type State
-    = Unauthenticated
+    = Unauthenticated (Maybe String)
     | Authenticated (List LeaderboardItem)
 
 
@@ -40,7 +45,7 @@ type alias Model =
 
 defaultModel : Model
 defaultModel =
-    { state = Unauthenticated
+    { state = Unauthenticated Nothing
     , typedPassword = ""
     }
 
@@ -57,11 +62,14 @@ update msg model =
         RequestToBackend ->
             requestLeaderboardFromBackend model
 
-        ReceiveFromBackend (Ok leaderboardItems) ->
+        ReceiveFromBackend (Ok (Success leaderboardItems)) ->
             ( { model | state = Authenticated leaderboardItems }, Cmd.none )
 
-        ReceiveFromBackend _ ->
-            ( model, Cmd.none )
+        ReceiveFromBackend (Ok (Failure json)) ->
+            ( { model | state = Unauthenticated <| Just json.error }, Cmd.none )
+
+        ReceiveFromBackend (Err json) ->
+            ( { model | state = Unauthenticated <| Just "something bad happened, bro" }, Cmd.none )
 
 
 requestLeaderboardFromBackend : Model -> ( Model, Cmd Msg )
@@ -72,7 +80,7 @@ requestLeaderboardFromBackend model =
             , headers = [ Http.header "X-Password" model.typedPassword ]
             , url = adminApiUrl
             , body = Http.emptyBody
-            , expect = Http.expectJson <| JD.list leaderboardItemDecoder
+            , expect = Http.expectJson <| decoder
             , timeout = Nothing
             , withCredentials = False
             }
@@ -91,8 +99,14 @@ view model wrapper =
                 Authenticated items ->
                     leaderboardView items
 
-                Unauthenticated ->
+                Unauthenticated Nothing ->
                     passwordFieldView wrapper
+
+                Unauthenticated (Just errorMessage) ->
+                    Html.div []
+                        [ passwordFieldView wrapper
+                        , errorMessageView errorMessage
+                        ]
     in
         Html.div
             [ id IndexCss.AdminSection ]
@@ -114,6 +128,12 @@ passwordFieldView wrapper =
             [ Html.Events.onClick <| wrapper RequestToBackend ]
             [ Html.text "Submit" ]
         ]
+
+
+errorMessageView : String -> Html a
+errorMessageView string =
+    Html.div [ id IndexCss.Errors ]
+        [ Html.text string ]
 
 
 leaderboardView : List LeaderboardItem -> Html a
