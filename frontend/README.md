@@ -1,15 +1,14 @@
 ## User Stories
 ===============
 
------
-
-GIVEN that I am a non-native french speaker
-WHEN I have entered some french phrases to practice
-THEN I should be able to add translations or notes as well
-
 **Tasks**
-* deploy and try it out on a mobile device
 * add an admin site so I can see user uuids and phrase count (leaderboard)
+  - button
+  - view with password
+  - success -> display data
+  - failure -> display error
+* remove checked in index.css
+* start trying to fix some of the linter errors surrounding exposing(..)
 * fix hella busted layout ?
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
 * try out elm test watch ?

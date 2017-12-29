@@ -1,4 +1,11 @@
-module Scenarios.Shared.Spies exposing (..)
+module Scenarios.Shared.Spies
+    exposing
+        ( allOfflineSpies
+        , allHttpSpies
+        , adminSpies
+        , getItemResponse
+        , uuidForSeed
+        )
 
 import Phrases exposing (..)
 import Ports.Bootstrap as Bootstrap
@@ -7,11 +14,14 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
+import Urls
 import Uuid exposing (uuidGenerator)
 import UuidGenerator
 import Elmer.Platform.Command as Command
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Http
+import Elmer.Http.Route
+import Elmer.Http.Stub
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Scenarios.Shared.Http exposing (..)
 
@@ -43,6 +53,15 @@ allHttpSpies endpoint ( uuid, newPhrase, translation ) savedPhrase =
         , stubbedPutResponse endpoint ( uuid, newPhrase, translation )
         ]
         :: sharedSpies
+
+
+adminSpies : List Spy
+adminSpies =
+    [ Elmer.Http.serve
+        [ Elmer.Http.Stub.for (Elmer.Http.Route.get Urls.adminApiUrl)
+            |> Elmer.Http.Stub.withBody """[{"userUuid": "the-uuid", "phraseCount": 11}]"""
+        ]
+    ]
 
 
 

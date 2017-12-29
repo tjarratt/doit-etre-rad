@@ -16,6 +16,7 @@ type CssClasses
     | Flip
     | AddTranslationButton
     | CancelTranslationButton
+    | LeaderboardItem
 
 
 type CssIds
@@ -26,6 +27,10 @@ type CssIds
     | AddWordInput
     | AddWordSaveButton
     | PhraseList
+    | SecretButton
+    | AdminSection
+    | Leaderboard
+    | PasswordField
 
 
 css : Css.Stylesheet
@@ -35,6 +40,10 @@ css =
             [ textAlign center ]
         , id Modes
             [ marginBottom (px 10) ]
+        , id SecretButton
+            [ position absolute
+            , bottom (px 10)
+            ]
         , id AddPhraseForm
             [ margin (px 20)
             , paddingBottom (px 20)
@@ -98,4 +107,6 @@ css =
             -- applies only to back
             , property "transform" "rotateY(180deg)"
             ]
+        , class LeaderboardItem
+            [ marginRight (px 10) ]
         ]

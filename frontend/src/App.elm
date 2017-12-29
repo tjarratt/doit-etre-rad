@@ -53,7 +53,9 @@ import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
+import Leaderboard
 import Phrases
+import Urls
 import Uuid
 import UuidGenerator
 
@@ -62,12 +64,14 @@ import UuidGenerator
 -- translating from english to french
 -- translating from french to english
 -- differentiating similar, but different words
+-- viewing leaderboard
 
 
 type Activity
     = FrenchToEnglish
     | EnglishToFrench
     | DifferentiateFrenchWords
+    | ViewLeaderboard
 
 
 {-| Represents all of the state changes in the application
@@ -87,6 +91,8 @@ type Msg
     | DidSaveToLocalStorage JD.Value
     | ReceivePhrasesFromBackend (Result Http.Error (List Phrases.SavedPhrase))
     | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
+    | NavigateToLeaderboard
+    | SetLeaderboard Leaderboard.Msg
 
 
 
@@ -114,13 +120,17 @@ type alias Model =
     , wordToAdd : String
     , currentTranslation : String
     , phrases : List PhraseViewModel
+    , leaderboard : Leaderboard.Model
     }
 
 
 
 {-
+   userUuid -> activity -> Phrases
+
    currentActivity + useruuid ...
    userUuid Maybe or ...
+   phrases should also logically be a part of this...
 
    wordToAdd belongs on an AddPhrase "component"
 
@@ -145,6 +155,7 @@ defaultModel seed =
     , wordToAdd = ""
     , currentTranslation = ""
     , phrases = []
+    , leaderboard = Leaderboard.defaultModel
     }
 
 
@@ -162,6 +173,7 @@ view model =
                 [ Html.h1 [] [ Html.text "I want to practice" ]
                 , activityButton "French words and phrases" "practiceFrench" PracticeFrenchPhrases
                 , activityButton "English words and phrases" "practiceEnglish" PracticeEnglishPhrases
+                , landingPageButton
                 ]
 
         Just FrenchToEnglish ->
@@ -178,8 +190,11 @@ view model =
                 , phraseListView model model.phrases
                 ]
 
-        Just _ ->
+        Just DifferentiateFrenchWords ->
             Html.div [] [ Html.text "Not done yet ..." ]
+
+        Just ViewLeaderboard ->
+            Leaderboard.view model.leaderboard (\msg -> SetLeaderboard msg)
 
 
 activityButton : String -> String -> Msg -> Html Msg
@@ -192,6 +207,15 @@ activityButton title idAttr msg =
             ]
             [ Html.text title ]
         ]
+
+
+landingPageButton : Html Msg
+landingPageButton =
+    Html.button
+        [ id IndexCss.SecretButton
+        , Html.Events.onClick NavigateToLeaderboard
+        ]
+        [ Html.text "shh..." ]
 
 
 phraseListView : Model -> List PhraseViewModel -> Html Msg
@@ -479,6 +503,18 @@ update msg model =
         ReceivePhrasesFromBackend _ ->
             ( model, Bootstrap.showTooltips () )
 
+        NavigateToLeaderboard ->
+            ( { model | currentActivity = Just ViewLeaderboard }, Cmd.none )
+
+        SetLeaderboard leaderboardMsg ->
+            let
+                ( leaderboard, msg ) =
+                    Leaderboard.update
+                        leaderboardMsg
+                        model.leaderboard
+            in
+                ( { model | leaderboard = leaderboard }, Cmd.map SetLeaderboard msg )
+
         Noop ->
             ( model, Cmd.none )
 
@@ -613,10 +649,10 @@ baseUrlForCurrentActivity : Maybe Activity -> String
 baseUrlForCurrentActivity currentActivity =
     case currentActivity of
         Just EnglishToFrench ->
-            "/api/phrases/english"
+            Urls.englishPhrasesUrl
 
         Just FrenchToEnglish ->
-            "/api/phrases/french"
+            Urls.frenchPhrasesUrl
 
         _ ->
             "/api/phrases/whoops"

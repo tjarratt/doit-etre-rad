@@ -3,12 +3,19 @@ module AppTests exposing (..)
 import App
 import Test exposing (..)
 import Elmer exposing (atIndex, hasLength, (<&&>))
+import Elmer.Html.Event as Event
 import Elmer.Html as Markup
-import Elmer.Html.Matchers exposing (element, elements, hasClass, hasText, hasAttribute, hasProperty)
+import Elmer.Html.Matchers exposing (element, elements, elementExists, hasClass, hasText, hasAttribute, hasProperty)
+import Elmer.Http
+import Elmer.Http.Matchers exposing (hasHeader)
+import Elmer.Http.Route
+import Elmer.Spy as Spy
+import Elmer.Platform.Subscription as Subscription
 import Scenarios exposing (..)
 import Scenarios.French exposing (..)
 import Scenarios.English exposing (..)
 import Scenarios.Shared exposing (..)
+import Scenarios.Shared.Spies exposing (adminSpies)
 import Scenarios.TestSetup exposing (TestSetup)
 
 
@@ -75,6 +82,52 @@ frenchUserUuidTests =
 englishUserUuidTests : Test
 englishUserUuidTests =
     userUuidTests englishSetup
+
+
+leaderboardTests : Test
+leaderboardTests =
+    describe "the admin portion of the site"
+        [ test "it displays a textfield" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use adminSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Markup.target "#SecretButton"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #PasswordField"
+                    |> Markup.expect elementExists
+        , test "it should submit the password to the backend" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use adminSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Markup.target "#SecretButton"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #PasswordField"
+                    |> Event.input "super secret password"
+                    |> Markup.target "#AdminSection button"
+                    |> Event.click
+                    |> Elmer.Http.expectThat
+                        (Elmer.Http.Route.get "/api/admin")
+                        (Elmer.each <| hasHeader ( "X-Password", "super secret password" ))
+        , test "it should display the results in a list" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use adminSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Markup.target "#SecretButton"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #PasswordField"
+                    |> Event.input "super secret password"
+                    |> Markup.target "#AdminSection button"
+                    |> Event.click
+                    |> Markup.target "#AdminSection #Leaderboard"
+                    |> Markup.expect
+                        (elements <|
+                            (atIndex 0 <| hasText "the-uuid")
+                                <&&> (atIndex 0 <| hasText "11")
+                        )
+        ]
 
 
 frenchSetup : TestSetup
