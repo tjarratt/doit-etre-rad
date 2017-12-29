@@ -2,11 +2,9 @@ module Leaderboard
     exposing
         ( Model
         , Msg
-        , LeaderboardItem
         , update
         , view
         , defaultModel
-        , leaderboardItemDecoder
         )
 
 import Html exposing (Html)
@@ -17,6 +15,7 @@ import IndexCss
 import Html
 import Html.Attributes
 import Http
+import Leaderboard.JSON exposing (LeaderboardItem, leaderboardItemDecoder)
 import Json.Decode as JD
 import Urls exposing (adminApiUrl)
 
@@ -28,24 +27,21 @@ type Msg
     | ReceiveFromBackend (Result Http.Error (List LeaderboardItem))
 
 
-type alias LeaderboardItem =
-    { userUuid : String
-    , phraseCount : Int
-    }
+type State
+    = Unauthenticated
+    | Authenticated (List LeaderboardItem)
 
 
 type alias Model =
-    { authenticated : Bool
+    { state : State
     , typedPassword : String
-    , items : List LeaderboardItem
     }
 
 
 defaultModel : Model
 defaultModel =
-    { authenticated = False
+    { state = Unauthenticated
     , typedPassword = ""
-    , items = []
     }
 
 
@@ -59,38 +55,43 @@ update msg model =
             ( { model | typedPassword = password }, Cmd.none )
 
         RequestToBackend ->
-            let
-                config =
-                    { method = "GET"
-                    , headers = [ Http.header "X-Password" model.typedPassword ]
-                    , url = adminApiUrl
-                    , body = Http.emptyBody
-                    , expect = Http.expectJson <| JD.list leaderboardItemDecoder
-                    , timeout = Nothing
-                    , withCredentials = False
-                    }
-
-                request =
-                    Http.request config
-            in
-                ( { model | typedPassword = "" }, Http.send ReceiveFromBackend request )
+            requestLeaderboardFromBackend model
 
         ReceiveFromBackend (Ok leaderboardItems) ->
-            ( { model | authenticated = True, items = leaderboardItems }, Cmd.none )
+            ( { model | state = Authenticated leaderboardItems }, Cmd.none )
 
         ReceiveFromBackend _ ->
             ( model, Cmd.none )
+
+
+requestLeaderboardFromBackend : Model -> ( Model, Cmd Msg )
+requestLeaderboardFromBackend model =
+    let
+        config =
+            { method = "GET"
+            , headers = [ Http.header "X-Password" model.typedPassword ]
+            , url = adminApiUrl
+            , body = Http.emptyBody
+            , expect = Http.expectJson <| JD.list leaderboardItemDecoder
+            , timeout = Nothing
+            , withCredentials = False
+            }
+
+        request =
+            Http.request config
+    in
+        ( { model | typedPassword = "" }, Http.send ReceiveFromBackend request )
 
 
 view : Model -> (Msg -> a) -> Html a
 view model wrapper =
     let
         innerView =
-            case model.authenticated of
-                True ->
-                    leaderboardView model wrapper
+            case model.state of
+                Authenticated items ->
+                    leaderboardView items
 
-                False ->
+                Unauthenticated ->
                     passwordFieldView wrapper
     in
         Html.div
@@ -115,12 +116,12 @@ passwordFieldView wrapper =
         ]
 
 
-leaderboardView : Model -> (Msg -> a) -> Html a
-leaderboardView model wrapper =
+leaderboardView : List LeaderboardItem -> Html a
+leaderboardView items =
     Html.ul
         [ id IndexCss.Leaderboard ]
     <|
-        List.map leaderboardItemView model.items
+        List.map leaderboardItemView items
 
 
 leaderboardItemView : LeaderboardItem -> Html abs
@@ -134,10 +135,3 @@ leaderboardItemView item =
 
 { id, class, classList } =
     Html.CssHelpers.withNamespace "index"
-
-
-leaderboardItemDecoder : JD.Decoder LeaderboardItem
-leaderboardItemDecoder =
-    JD.map2 LeaderboardItem
-        (JD.field "userUuid" JD.string)
-        (JD.field "phraseCount" JD.int)

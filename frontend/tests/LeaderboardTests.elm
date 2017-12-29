@@ -6,6 +6,7 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Test exposing (..)
 import Leaderboard exposing (..)
+import Leaderboard.JSON exposing (..)
 
 
 jsonEncodeDecodeTest : Test
