@@ -23,7 +23,6 @@ type showPhrasesHandler struct {
 }
 
 func (handler showPhrasesHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-
 	params, err := handler.paramReader.ReadParamsFromRequest(request)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
