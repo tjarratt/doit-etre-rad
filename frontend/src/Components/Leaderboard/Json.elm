@@ -1,4 +1,4 @@
-module Leaderboard.JSON
+module Components.Leaderboard.JSON
     exposing
         ( LeaderboardItem
         , decoder

@@ -1,4 +1,4 @@
-module Leaderboard
+module Components.Leaderboard
     exposing
         ( Model
         , Msg
@@ -24,7 +24,7 @@ import IndexCss
 import Html
 import Html.Attributes
 import Http
-import Leaderboard.JSON exposing (LeaderboardItem, decoder, errorDecoder)
+import Components.Leaderboard.JSON exposing (LeaderboardItem, decoder, errorDecoder)
 import Urls exposing (adminApiUrl)
 
 

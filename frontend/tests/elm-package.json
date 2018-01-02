@@ -6,7 +6,6 @@
     "source-directories": [
         ".",
         "../src",
-        "../src/Leaderboard",
         "Scenarios"
     ],
     "exposed-modules": [],

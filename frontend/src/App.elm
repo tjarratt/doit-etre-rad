@@ -53,7 +53,7 @@ import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
-import Leaderboard
+import Components.Leaderboard as Leaderboard
 import Phrases
 import Urls
 import Uuid
@@ -213,6 +213,7 @@ landingPageButton : Html Msg
 landingPageButton =
     Html.button
         [ id IndexCss.SecretButton
+        , Html.Attributes.class "btn btn-default"
         , Html.Events.onClick NavigateToLeaderboard
         ]
         [ Html.text "shh..." ]
