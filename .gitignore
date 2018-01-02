@@ -1,13 +1,3 @@
-# elm-package generated files
-elm-stuff
-
-# elm-repl generated files
-repl-temp-*
-
-# elm-make generated files
-index.js
-tmp
-
 # local development logs
 logs
 
