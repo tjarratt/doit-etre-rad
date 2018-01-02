@@ -7,6 +7,15 @@ module Leaderboard
         , defaultModel
         )
 
+{-| Provides a component for the "leaderboard" page of the app
+
+
+# Elm Architecture bits
+
+@docs Model, Msg, update, view, defaultModel
+
+-}
+
 import Html exposing (Html)
 import Html.CssHelpers
 import Html.Events
@@ -25,6 +34,8 @@ import Leaderboard.JSON
 import Urls exposing (adminApiUrl)
 
 
+{-| possible messages that can be handles internally
+-}
 type Msg
     = Noop
     | TypePassword String
@@ -37,12 +48,16 @@ type State
     | Authenticated (List LeaderboardItem)
 
 
+{-| state of the component
+-}
 type alias Model =
     { state : State
     , typedPassword : String
     }
 
 
+{-| how the model initially works - used to embed the component into a larger app
+-}
 defaultModel : Model
 defaultModel =
     { state = Unauthenticated Nothing
@@ -50,6 +65,8 @@ defaultModel =
     }
 
 
+{-| should be called by the presenting application/component's update function
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -91,6 +108,11 @@ requestLeaderboardFromBackend model =
         ( { model | typedPassword = "" }, Http.send ReceiveFromBackend request )
 
 
+{-| should be called by the presenting application/component
+interestingly enough, this needs to be generic over a given Msg type
+because we cannot anticipate all possible messages this will need to send
+in the component that presents us
+-}
 view : Model -> (Msg -> a) -> Html a
 view model wrapper =
     let
