@@ -1,20 +1,42 @@
-module AppTests exposing (..)
+module AppTests
+    exposing
+        ( initialViewTests
+        , practiceFrenchPhrasesViewTests
+        , practiceEnglishPhrasesViewTests
+        , renderingFrenchPhrasesTests
+        , renderingEnglishPhrasesTests
+        , addingFrenchTranslationsTests
+        , addingEnglishTranslationsTests
+        , frenchOfflineTests
+        , englishOfflineTests
+        , frenchUserUuidTests
+        , englishUserUuidTests
+        , leaderboardTests
+        )
 
 import App
-import Test exposing (..)
-import Elmer exposing (atIndex, hasLength, (<&&>))
+import Test exposing (Test, describe, test)
+import Elmer exposing (atIndex, (<&&>))
 import Elmer.Html.Event as Event
 import Elmer.Html as Markup
-import Elmer.Html.Matchers exposing (element, elements, elementExists, hasClass, hasText, hasAttribute, hasProperty)
+import Elmer.Html.Matchers exposing (element, elements, elementExists, hasText)
 import Elmer.Http
 import Elmer.Http.Matchers exposing (hasHeader)
 import Elmer.Http.Route
 import Elmer.Spy as Spy
 import Elmer.Platform.Subscription as Subscription
-import Scenarios exposing (..)
-import Scenarios.French exposing (..)
-import Scenarios.English exposing (..)
-import Scenarios.Shared exposing (..)
+import Scenarios exposing (practiceFrenchPhrases, practiceEnglishPhrases)
+import Scenarios.French exposing (allFrenchSpies, allFrenchOfflineSpies)
+import Scenarios.English exposing (allEnglishSpies, allEnglishOfflineSpies)
+import Scenarios.Shared
+    exposing
+        ( practiceActivityTests
+        , offlineTests
+        , defaultModel
+        , renderingPhrasesTests
+        , addingTranslationsTests
+        , userUuidTests
+        )
 import Scenarios.Shared.Spies exposing (adminSpies, adminErrorCaseSpies)
 import Scenarios.TestSetup exposing (TestSetup)
 

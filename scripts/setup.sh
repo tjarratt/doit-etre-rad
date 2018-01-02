@@ -22,6 +22,7 @@ npm install -g elm-css
 npm install -g elm-test
 npm install -g elm-format
 npm install -g elm-oracle
+npm install -g node-elm-lint
 npm install -g elm-github-install
 npm install -g postcss-cli autoprefixer
 

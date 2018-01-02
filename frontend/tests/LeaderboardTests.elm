@@ -1,12 +1,11 @@
-module LeaderboardTests exposing (..)
+module LeaderboardTests exposing (jsonEncodeDecodeTest)
 
 import Expect
 import Fuzz exposing (string, int)
 import Json.Decode as JD
 import Json.Encode as JE
-import Test exposing (..)
-import Leaderboard exposing (..)
-import Leaderboard.JSON exposing (..)
+import Test exposing (Test, describe, fuzz2)
+import Leaderboard.JSON exposing (LeaderboardItem, leaderboardItemDecoder)
 
 
 jsonEncodeDecodeTest : Test

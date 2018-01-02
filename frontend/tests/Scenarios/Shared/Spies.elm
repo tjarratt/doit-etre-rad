@@ -25,7 +25,13 @@ import Elmer.Http.Route
 import Elmer.Http.Status exposing (unauthorized)
 import Elmer.Http.Stub
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
-import Scenarios.Shared.Http exposing (..)
+import Scenarios.Shared.Http
+    exposing
+        ( offlineSpies
+        , stubbedGetResponse
+        , stubbedPutResponse
+        , stubbedPostResponse
+        )
 
 
 sharedSpies : List Spy

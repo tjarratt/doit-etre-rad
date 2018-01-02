@@ -1,8 +1,15 @@
-module PhrasesTests exposing (..)
+module PhrasesTests exposing (translateTests, mergeTests, equalTests, toStringTests)
 
 import Expect
-import Test exposing (..)
-import Phrases exposing (..)
+import Test exposing (Test, describe, test)
+import Phrases
+    exposing
+        ( Phrase(..)
+        , translationOf
+        , translate
+        , merge
+        , phraseEqual
+        )
 
 
 translateTests : Test

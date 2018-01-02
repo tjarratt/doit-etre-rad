@@ -6,7 +6,7 @@ module Scenarios.English
         )
 
 import Ports.LocalStorage
-import Scenarios.Shared.Spies exposing (..)
+import Scenarios.Shared.Spies exposing (allHttpSpies, allOfflineSpies)
 import Elmer.Spy
 
 

@@ -1,12 +1,12 @@
-module LocalStorageTests exposing (..)
+module LocalStorageTests exposing (jsonEncodeDecodeTest)
 
 import Expect
 import Fuzz exposing (string)
 import Json.Decode as JD
 import Json.Encode as JE
-import Test exposing (..)
-import Ports.LocalStorage exposing (..)
-import Phrases exposing (..)
+import Test exposing (Test, describe, fuzz2, fuzz3)
+import Ports.LocalStorage exposing (phraseDecoder, phraseEncoder)
+import Phrases exposing (Phrase(..))
 
 
 jsonEncodeDecodeTest : Test

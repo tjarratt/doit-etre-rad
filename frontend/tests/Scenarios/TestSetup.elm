@@ -1,4 +1,4 @@
-module Scenarios.TestSetup exposing (..)
+module Scenarios.TestSetup exposing (TestSetup)
 
 import App
 import Elmer

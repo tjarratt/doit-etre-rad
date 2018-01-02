@@ -1,4 +1,4 @@
-module IndexCss exposing (..)
+module IndexCss exposing (css, CssClasses(..), CssIds(..))
 
 import Css exposing (..)
 import Css.Namespace exposing (namespace)

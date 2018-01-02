@@ -1,4 +1,4 @@
-module Urls exposing (..)
+module Urls exposing (adminApiUrl, englishPhrasesUrl, frenchPhrasesUrl)
 
 
 adminApiUrl : String

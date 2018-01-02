@@ -2,11 +2,14 @@
 ===============
 
 **Tasks**
-* remove checked in index.css
 * start trying to fix some of the linter errors surrounding exposing(..)
 * fix hella busted layout ?
+* refactor more of the app module
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
-* try out elm test watch ?
+* think about authentication
+  -> want to keep it simple
+  -> maybe allow users to start simply, and then eventually "create" an account
+* upgrade to new way of creating css with elm-css
 
 -----
 

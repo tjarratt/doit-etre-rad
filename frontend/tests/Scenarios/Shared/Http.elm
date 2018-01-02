@@ -1,8 +1,14 @@
-module Scenarios.Shared.Http exposing (..)
+module Scenarios.Shared.Http
+    exposing
+        ( offlineSpies
+        , stubbedGetResponse
+        , stubbedPostResponse
+        , stubbedPutResponse
+        )
 
 import Http
 import Json.Encode as JE
-import Phrases exposing (..)
+import Phrases exposing (Phrase(..))
 import Ports.LocalStorage as LocalStorage
 import Elmer.Http
 import Elmer.Http.Route
