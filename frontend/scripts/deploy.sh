@@ -13,6 +13,7 @@ cp index.html tmp/app
 
 # move all of our assets into the deploy directory
 cp assets/* assets/*.css tmp/app/assets/
+cp assets/drapeau_francais_favicon.ico tmp/app/favicon.ico
 
 # version our application cache
 # if we version the assets (javascript, css, etc...) then the browser will
