@@ -24,13 +24,7 @@ import IndexCss
 import Html
 import Html.Attributes
 import Http
-import Leaderboard.JSON
-    exposing
-        ( Error
-        , LeaderboardItem
-        , LeaderboardResult(..)
-        , decoder
-        )
+import Leaderboard.JSON exposing (LeaderboardItem, decoder, errorDecoder)
 import Urls exposing (adminApiUrl)
 
 
@@ -40,7 +34,7 @@ type Msg
     = Noop
     | TypePassword String
     | RequestToBackend
-    | ReceiveFromBackend (Result Http.Error LeaderboardResult)
+    | ReceiveFromBackend (Result Http.Error (List LeaderboardItem))
 
 
 type State
@@ -79,14 +73,11 @@ update msg model =
         RequestToBackend ->
             requestLeaderboardFromBackend model
 
-        ReceiveFromBackend (Ok (Success leaderboardItems)) ->
+        ReceiveFromBackend (Ok leaderboardItems) ->
             ( { model | state = Authenticated leaderboardItems }, Cmd.none )
 
-        ReceiveFromBackend (Ok (Failure json)) ->
-            ( { model | state = Unauthenticated <| Just json.error }, Cmd.none )
-
-        ReceiveFromBackend (Err json) ->
-            ( { model | state = Unauthenticated <| Just "something bad happened, bro" }, Cmd.none )
+        ReceiveFromBackend (Err error) ->
+            handleBackendError model error
 
 
 requestLeaderboardFromBackend : Model -> ( Model, Cmd Msg )
@@ -106,6 +97,20 @@ requestLeaderboardFromBackend model =
             Http.request config
     in
         ( { model | typedPassword = "" }, Http.send ReceiveFromBackend request )
+
+
+handleBackendError : Model -> Http.Error -> ( Model, Cmd Msg )
+handleBackendError model error =
+    let
+        messageToShow =
+            case error of
+                Http.BadStatus response ->
+                    errorDecoder response.body
+
+                _ ->
+                    "something bad happened, bro"
+    in
+        ( { model | state = Unauthenticated <| Just messageToShow }, Cmd.none )
 
 
 {-| should be called by the presenting application/component
@@ -166,7 +171,7 @@ leaderboardView items =
         List.map leaderboardItemView items
 
 
-leaderboardItemView : LeaderboardItem -> Html abs
+leaderboardItemView : LeaderboardItem -> Html a
 leaderboardItemView item =
     Html.li
         []

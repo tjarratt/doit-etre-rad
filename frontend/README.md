@@ -2,11 +2,6 @@
 ===============
 
 **Tasks**
-* add an admin site so I can see user uuids and phrase count (leaderboard)
-  - button
-  - view with password
-  - success -> display data
-  - failure -> display error
 * remove checked in index.css
 * start trying to fix some of the linter errors surrounding exposing(..)
 * fix hella busted layout ?

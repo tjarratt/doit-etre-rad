@@ -70,9 +70,8 @@ adminErrorCaseSpies : List Spy
 adminErrorCaseSpies =
     [ Elmer.Http.serve
         [ Elmer.Http.Stub.for (Elmer.Http.Route.get Urls.adminApiUrl)
-            |> Elmer.Http.Stub.withBody """{"error": "ah ah ah you didn't say the magic word"}"""
-
-        -- |> Elmer.Http.Stub.withStatus unauthorized
+            |> Elmer.Http.Stub.withBody """{"error": "Ah ah ah you didn't say the magic word !"}"""
+            |> Elmer.Http.Stub.withStatus unauthorized
         ]
     ]
 

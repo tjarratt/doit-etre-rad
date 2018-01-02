@@ -127,7 +127,7 @@ leaderboardTests =
                             (atIndex 0 <| hasText "the-uuid")
                                 <&&> (atIndex 0 <| hasText "11")
                         )
-        , test "it should display an error message when the request fails" <|
+        , test "it should display an error message when the server returns an error" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use adminErrorCaseSpies
@@ -140,7 +140,7 @@ leaderboardTests =
                     |> Event.click
                     |> Markup.target "#AdminSection #Errors"
                     |> Markup.expect
-                        (element <| hasText "ah ah ah you didn't say the magic word")
+                        (element <| hasText "Ah ah ah you didn't say the magic word !")
         ]
 
 

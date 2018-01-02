@@ -1,9 +1,8 @@
 module Leaderboard.JSON
     exposing
         ( LeaderboardItem
-        , Error
-        , LeaderboardResult(..)
         , decoder
+        , errorDecoder
         , leaderboardItemDecoder
         )
 
@@ -23,31 +22,23 @@ leaderboardItemDecoder =
         (JD.field "phraseCount" JD.int)
 
 
-type alias Error =
-    { error : String }
-
-
-errorDecoder : JD.Decoder Error
-errorDecoder =
-    JD.map Error
-        (JD.field "error" JD.string)
-
-
-type LeaderboardResult
-    = Success (List LeaderboardItem)
-    | Failure Error
-
-
-successDecoder : JD.Decoder LeaderboardResult
-successDecoder =
-    JD.map Success <| JD.list leaderboardItemDecoder
-
-
-fooErrorDecoder : JD.Decoder LeaderboardResult
-fooErrorDecoder =
-    JD.map Failure errorDecoder
-
-
-decoder : JD.Decoder LeaderboardResult
+decoder : JD.Decoder (List LeaderboardItem)
 decoder =
-    JD.oneOf [ successDecoder, fooErrorDecoder ]
+    JD.list leaderboardItemDecoder
+
+
+errorDecoder : String -> String
+errorDecoder responseBody =
+    let
+        decoder =
+            JD.field "error" JD.string
+
+        result =
+            JD.decodeString decoder responseBody
+    in
+        case result of
+            Ok errorMessage ->
+                errorMessage
+
+            _ ->
+                "something bad happened, bro"
