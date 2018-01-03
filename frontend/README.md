@@ -1,8 +1,16 @@
 ## User Stories
 ===============
 
-**Tasks**
+---------------------------
+**Icebox and sundry Tasks**
+---------------------------
+* refactor more of the app module
+  - addPhrase / phrases into ManageTranslation component
+  - split up current activities more so components aren't always in memory
 * fix hella busted layout ?
+  - shh button slightly off-center
+  - word cards
+  - word translations
 * refactor more of the app module
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
 * think about authentication
@@ -10,6 +18,18 @@
   -> maybe allow users to start simply, and then eventually "create" an account
 * upgrade to new way of creating css with elm-css
 * fix even more lint errors ?
+* after saving from backend, local storage is out of date
+  -> most recent phrase is still "unsaved" :-\
+* focus input when page is shown
+  -> ("pageshow" event, see "safariwebcontent" docs on handling events)
+* delete items from list
+* reverse sort phrases so I see newest ones at top
+* edit the phrase to be translated ?
+* shake on validation error (with messages)
+* spaced repetition for practice
+  - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
+  - https://www.supermemo.com/english/ol/nn_train.htm
+* manual sync ?
 
 -----
 
@@ -38,20 +58,6 @@ AND I tap the "manual sync" button
 THEN I should see the unsaved indicator go away
 AND if I refresh the page
 THEN I should see that none of my phrases are unsaved
-
-------
-
-Icebox
-------
-
-* delete items from list
-* "practice mode"
-* edit the phrase to be translated ?
-* shake on validation error (with messages)
-* spaced repetition for practice
-  - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
-  - https://www.supermemo.com/english/ol/nn_train.htm
-
 
 -----
 

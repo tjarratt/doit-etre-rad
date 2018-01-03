@@ -38,6 +38,7 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 
 -}
 
+import Activities exposing (Activity(..))
 import Css.Helpers exposing (identifierToString)
 import Dom
 import Json.Decode as JD
@@ -54,6 +55,7 @@ import Ports.LocalStorage as LocalStorage
 import Random.Pcg exposing (Seed, initialSeed)
 import Task
 import Components.Leaderboard as Leaderboard
+import Components.AddPhrase as AddPhrase
 import Phrases
 import Urls
 import Uuid
@@ -67,13 +69,6 @@ import UuidGenerator
 -- viewing leaderboard
 
 
-type Activity
-    = FrenchToEnglish
-    | EnglishToFrench
-    | DifferentiateFrenchWords
-    | ViewLeaderboard
-
-
 {-| Represents all of the state changes in the application
 -}
 type Msg
@@ -81,11 +76,9 @@ type Msg
     | ReceiveUserUuid (Maybe String)
     | PracticeFrenchPhrases
     | PracticeEnglishPhrases
-    | TypePhraseUpdate String
     | TypeTranslationUpdate String
     | StartEditingTranslation PhraseViewModel
     | AddTranslationToPhrase PhraseViewModel
-    | AddPhraseToPractice
     | FlipPhraseCard PhraseViewModel
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
@@ -93,15 +86,11 @@ type Msg
     | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
     | NavigateToLeaderboard
     | SetLeaderboard Leaderboard.Msg
+    | SetAddPhrase AddPhrase.Msg
 
 
 
 {-
-   AddPhraseMsg
-   =================
-   TypePhraseUpdate
-   AddPhraseToPracice
-
    PhraseCardMsg
    ================
    FlipPhraseCard
@@ -116,26 +105,18 @@ type Msg
 type alias ApplicationState =
     { userUuid : Maybe Uuid.Uuid
     , currentSeed : Seed
-    , currentActivity : Maybe Activity
-    , wordToAdd : String
     , currentTranslation : String
+    , addPhrase : AddPhrase.Model
     , phrases : List PhraseViewModel
     , leaderboard : Leaderboard.Model
+    , currentPage : CurrentPage
     }
 
 
-
-{-
-   userUuid -> activity -> Phrases
-
-   currentActivity + useruuid ...
-   userUuid Maybe or ...
-   phrases should also logically be a part of this...
-
-   wordToAdd belongs on an AddPhrase "component"
-
-   currentTranslation belongs on a "PhraseCard" component
--}
+type CurrentPage
+    = LandingPage
+    | ViewLeaderboard
+    | ViewActivity Activity
 
 
 type alias PhraseViewModel =
@@ -149,13 +130,13 @@ type alias PhraseViewModel =
 -}
 defaultModel : Int -> ApplicationState
 defaultModel seed =
-    { userUuid = Nothing
+    { currentPage = LandingPage
+    , userUuid = Nothing
     , currentSeed = initialSeed seed
-    , currentActivity = Nothing
-    , wordToAdd = ""
     , currentTranslation = ""
     , phrases = []
     , leaderboard = Leaderboard.defaultModel
+    , addPhrase = AddPhrase.defaultModel DifferentiateFrenchWords -- FIXME this should not be here
     }
 
 
@@ -167,8 +148,8 @@ defaultModel seed =
 -}
 view : ApplicationState -> Html Msg
 view model =
-    case model.currentActivity of
-        Nothing ->
+    case model.currentPage of
+        LandingPage ->
             Html.div [ id IndexCss.LandingPage ]
                 [ Html.h1 [] [ Html.text "I want to practice" ]
                 , activityButton "French words and phrases" "practiceFrench" PracticeFrenchPhrases
@@ -176,25 +157,27 @@ view model =
                 , landingPageButton
                 ]
 
-        Just FrenchToEnglish ->
-            Html.div []
-                [ Html.h1 [] [ Html.text "Practicing French phrases" ]
-                , addWordForm "à tout de suite" model
-                , phraseListView model model.phrases
-                ]
+        ViewLeaderboard ->
+            Leaderboard.view model.leaderboard SetLeaderboard
 
-        Just EnglishToFrench ->
-            Html.div []
-                [ Html.h1 [] [ Html.text "Practicing English phrases" ]
-                , addWordForm "colorless green ideas sleep furiously" model
-                , phraseListView model model.phrases
-                ]
+        ViewActivity activity ->
+            case activity of
+                FrenchToEnglish ->
+                    Html.div []
+                        [ Html.h1 [] [ Html.text "Practicing French phrases" ]
+                        , AddPhrase.view model.addPhrase SetAddPhrase
+                        , phraseListView model model.phrases
+                        ]
 
-        Just DifferentiateFrenchWords ->
-            Html.div [] [ Html.text "Not done yet ..." ]
+                EnglishToFrench ->
+                    Html.div []
+                        [ Html.h1 [] [ Html.text "Practicing English phrases" ]
+                        , AddPhrase.view model.addPhrase SetAddPhrase
+                        , phraseListView model model.phrases
+                        ]
 
-        Just ViewLeaderboard ->
-            Leaderboard.view model.leaderboard (\msg -> SetLeaderboard msg)
+                DifferentiateFrenchWords ->
+                    Html.div [] [ Html.text "Not done yet ..." ]
 
 
 activityButton : String -> String -> Msg -> Html Msg
@@ -361,52 +344,6 @@ offlineModeTooltip =
     "This phrase is saved locally, but has not been saved to our server."
 
 
-addWordForm : String -> ApplicationState -> Html Msg
-addWordForm placeholder model =
-    Html.form
-        [ Html.Attributes.action "javascript:void(0)"
-        , id IndexCss.AddPhraseForm
-        ]
-        [ Html.div
-            [ Html.Attributes.id "add-word"
-            , Html.Attributes.class "text-center"
-            ]
-            [ Html.label
-                [ id IndexCss.AddWordLabel
-                , Html.Attributes.for (identifierToString "" IndexCss.AddWordInput)
-                ]
-                [ Html.text (inputLabel model.currentActivity) ]
-            , Html.input
-                [ id IndexCss.AddWordInput
-                , Html.Attributes.placeholder placeholder
-                , Html.Attributes.class "form-control"
-                , Html.Events.onInput TypePhraseUpdate
-                , Html.Attributes.value model.wordToAdd
-                ]
-                []
-            , Html.button
-                [ id IndexCss.AddWordSaveButton
-                , Html.Events.onClick AddPhraseToPractice
-                , Html.Attributes.class "btn btn-default"
-                ]
-                [ Html.text "Add" ]
-            ]
-        ]
-
-
-inputLabel : Maybe Activity -> String
-inputLabel currentActivity =
-    case currentActivity of
-        Just EnglishToFrench ->
-            "Add an english phrase"
-
-        Just FrenchToEnglish ->
-            "Add a french phrase"
-
-        _ ->
-            "Impossible state whoops !"
-
-
 {-| Modifies application state in response to messages from components
 -}
 update : Msg -> ApplicationState -> ( ApplicationState, Cmd Msg )
@@ -417,15 +354,6 @@ update msg model =
 
         PracticeEnglishPhrases ->
             startActivity EnglishToFrench "englishPhrases" model
-
-        TypePhraseUpdate phrase ->
-            ( { model | wordToAdd = phrase }, Cmd.none )
-
-        AddPhraseToPractice ->
-            if String.length model.wordToAdd == 0 then
-                ( model, Cmd.none )
-            else
-                persistCurrentPhrase model
 
         FlipPhraseCard phrase ->
             flipCardMatchingPhrase model phrase
@@ -451,7 +379,7 @@ update msg model =
                     case JD.decodeValue LocalStorage.phraseDecoder encodedPhrase of
                         Ok phrase ->
                             sendPhraseToBackend
-                                model.currentActivity
+                                (activityForCurrentPage model.currentPage)
                                 model.userUuid
                                 phrase
 
@@ -466,7 +394,7 @@ update msg model =
                     (Uuid.fromString uuidString)
             in
                 ( { model | userUuid = uuid }
-                , getPhrasesFromBackend model.currentActivity uuid
+                , getPhrasesFromBackend (activityForCurrentPage model.currentPage) uuid
                 )
 
         ReceiveUserUuid Nothing ->
@@ -505,7 +433,27 @@ update msg model =
             ( model, Bootstrap.showTooltips () )
 
         NavigateToLeaderboard ->
-            ( { model | currentActivity = Just ViewLeaderboard }, Cmd.none )
+            ( { model | currentPage = ViewLeaderboard }, Cmd.none )
+
+        SetAddPhrase addPhraseMsg ->
+            let
+                ( phraseModel, childMsg, outMsg ) =
+                    AddPhrase.update
+                        addPhraseMsg
+                        model.addPhrase
+
+                updatedModel =
+                    { model | addPhrase = phraseModel }
+
+                ( newModel, newCmd ) =
+                    processAddPhraseMsg outMsg updatedModel
+            in
+                ( newModel
+                , Cmd.batch
+                    [ Cmd.map SetAddPhrase childMsg
+                    , newCmd
+                    ]
+                )
 
         SetLeaderboard leaderboardMsg ->
             let
@@ -520,15 +468,35 @@ update msg model =
             ( model, Cmd.none )
 
 
+processAddPhraseMsg : AddPhrase.OutMsg -> ApplicationState -> ( ApplicationState, Cmd Msg )
+processAddPhraseMsg outMsg model =
+    case outMsg of
+        AddPhrase.Noop ->
+            ( model, Cmd.none )
+
+        AddPhrase.NewPhraseCreated newPhrase ->
+            persistCurrentPhrase model newPhrase
+
+
 startActivity : Activity -> String -> ApplicationState -> ( ApplicationState, Cmd msg )
 startActivity activity localStorageKey model =
-    ( { model | currentActivity = Just activity }
-    , Cmd.batch
-        [ LocalStorage.getUserUuid ()
-        , LocalStorage.getItem localStorageKey
-        , Bootstrap.showTooltips ()
-        ]
-    )
+    let
+        childModel =
+            model.addPhrase
+
+        updatedAddPhrase =
+            { childModel | activity = activity }
+    in
+        ( { model
+            | currentPage = ViewActivity activity
+            , addPhrase = updatedAddPhrase
+          }
+        , Cmd.batch
+            [ LocalStorage.getUserUuid ()
+            , LocalStorage.getItem localStorageKey
+            , Bootstrap.showTooltips ()
+            ]
+        )
 
 
 handleValueFromLocalStorage : ApplicationState -> String -> Maybe JE.Value -> ( ApplicationState, Cmd msg )
@@ -712,12 +680,9 @@ startEditingMatchingPhrase model viewModel =
         )
 
 
-persistCurrentPhrase : ApplicationState -> ( ApplicationState, Cmd Msg )
-persistCurrentPhrase model =
+persistCurrentPhrase : ApplicationState -> Phrases.Phrase -> ( ApplicationState, Cmd Msg )
+persistCurrentPhrase model newPhrase =
     let
-        newPhrase =
-            Phrases.Unsaved { content = model.wordToAdd, translation = "" }
-
         updatedModel =
             mergePhraseViewModels
                 model
@@ -739,7 +704,7 @@ persistCurrentPhrase model =
             Task.perform (\_ -> Noop) focusTask
 
         saveInLocalStorage =
-            case model.currentActivity of
+            case activityForCurrentPage model.currentPage of
                 Just EnglishToFrench ->
                     LocalStorage.saveEnglishPhrases ( updatedPhrases, newPhrase )
 
@@ -749,7 +714,7 @@ persistCurrentPhrase model =
                 _ ->
                     Cmd.none
     in
-        ( { updatedModel | wordToAdd = "" }
+        ( updatedModel
         , Cmd.batch [ focusInput, saveInLocalStorage ]
         )
 
@@ -780,7 +745,7 @@ persistCurrentTranslation model viewModel =
             List.map (\p -> p.phrase) updatedViewModel
 
         localStorageCommand =
-            case model.currentActivity of
+            case activityForCurrentPage model.currentPage of
                 Just EnglishToFrench ->
                     LocalStorage.saveEnglishPhrases ( phrases, translatedPhrase )
 
@@ -813,6 +778,19 @@ mergePhraseViewModels model phrases =
                 mergedPhrases
     in
         { model | phrases = phraseViewModels }
+
+
+activityForCurrentPage : CurrentPage -> Maybe Activity
+activityForCurrentPage currentPage =
+    case currentPage of
+        LandingPage ->
+            Nothing
+
+        ViewLeaderboard ->
+            Nothing
+
+        ViewActivity activity ->
+            Just activity
 
 
 {-| Subscribes to updates from the outside world (ooh, spooky!)
