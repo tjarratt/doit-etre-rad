@@ -37,6 +37,8 @@ defaultModel activity =
     { activity = activity, typedPhrase = "" }
 
 
+{-| UPDATE
+-}
 update : Msg -> Model -> ( Model, Cmd Msg, OutMsg )
 update msg model =
     case msg of
@@ -59,6 +61,8 @@ clearFormAndSubmitPhrase model =
         ( { model | typedPhrase = "" }, Cmd.none, NewPhraseCreated newPhrase )
 
 
+{-| VIEW
+-}
 view : Model -> (Msg -> a) -> Html a
 view model wrapper =
     addWordForm model wrapper

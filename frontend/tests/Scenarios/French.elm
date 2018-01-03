@@ -1,18 +1,13 @@
-module Scenarios.French
-    exposing
-        ( allFrenchSpies
-        , allFrenchOfflineSpies
-        , saveFrenchPhrasesSpy
-        )
+module Scenarios.French exposing (allFrenchSpies, allFrenchOfflineSpies)
 
 import Ports.LocalStorage
-import Scenarios.Shared.Spies exposing (allHttpSpies, allOfflineSpies)
+import Scenarios.Shared.Spies exposing (allOnlineSpies, allOfflineSpies)
 import Elmer.Spy
 
 
 allFrenchSpies : List Elmer.Spy.Spy
 allFrenchSpies =
-    saveFrenchPhrasesSpy :: (withFrenchSettings allHttpSpies)
+    saveFrenchPhrasesSpy :: (withFrenchSettings allOnlineSpies)
 
 
 allFrenchOfflineSpies : List Elmer.Spy.Spy

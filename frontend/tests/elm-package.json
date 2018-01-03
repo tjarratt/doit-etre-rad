@@ -6,7 +6,8 @@
     "source-directories": [
         ".",
         "../src",
-        "Scenarios"
+        "Scenarios",
+	"Components"
     ],
     "exposed-modules": [],
     "dependencies": {

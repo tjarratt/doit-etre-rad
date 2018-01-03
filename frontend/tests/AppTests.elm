@@ -1,20 +1,14 @@
 module AppTests
     exposing
-        ( initialViewTests
-        , practiceFrenchPhrasesViewTests
-        , practiceEnglishPhrasesViewTests
-        , renderingFrenchPhrasesTests
-        , renderingEnglishPhrasesTests
-        , addingFrenchTranslationsTests
-        , addingEnglishTranslationsTests
-        , frenchOfflineTests
-        , englishOfflineTests
-        , frenchUserUuidTests
-        , englishUserUuidTests
+        ( landingPageTests
+        , practiceFrenchTests
+        , practiceEnglishTests
         , leaderboardTests
+        , userUuidTests
         )
 
 import App
+import Activities
 import Test exposing (Test, describe, test)
 import Elmer exposing (atIndex, (<&&>))
 import Elmer.Html.Event as Event
@@ -24,26 +18,26 @@ import Elmer.Http
 import Elmer.Http.Matchers exposing (hasHeader)
 import Elmer.Http.Route
 import Elmer.Spy as Spy
+import Elmer.Spy.Matchers exposing (wasCalled)
 import Elmer.Platform.Subscription as Subscription
 import Scenarios exposing (practiceFrenchPhrases, practiceEnglishPhrases)
-import Scenarios.French exposing (allFrenchSpies, allFrenchOfflineSpies)
-import Scenarios.English exposing (allEnglishSpies, allEnglishOfflineSpies)
 import Scenarios.Shared
     exposing
         ( practiceActivityTests
-        , offlineTests
         , defaultModel
-        , renderingPhrasesTests
-        , addingTranslationsTests
-        , userUuidTests
         )
-import Scenarios.Shared.Spies exposing (adminSpies, adminErrorCaseSpies)
+import Scenarios.Shared.Spies
+    exposing
+        ( adminSpies
+        , adminErrorCaseSpies
+        , getUserUuidSpy
+        )
 import Scenarios.TestSetup exposing (TestSetup)
 
 
-initialViewTests : Test
-initialViewTests =
-    describe "initial view"
+landingPageTests : Test
+landingPageTests =
+    describe "the landing page"
         [ test "it has various options for activities to practice" <|
             \() ->
                 Elmer.given defaultModel App.view App.update
@@ -56,54 +50,27 @@ initialViewTests =
         ]
 
 
-practiceFrenchPhrasesViewTests : Test
-practiceFrenchPhrasesViewTests =
+userUuidTests : Test
+userUuidTests =
+    describe "a unique uuid for the user"
+        [ test "will be requested when the app starts" <|
+            \() ->
+                Elmer.given defaultModel App.view App.update
+                    |> Spy.use [ getUserUuidSpy ]
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Elmer.init (\_ -> App.init { seed = 0 })
+                    |> Spy.expect "getUserUuid" (wasCalled 1)
+        ]
+
+
+practiceFrenchTests : Test
+practiceFrenchTests =
     practiceActivityTests frenchSetup
 
 
-practiceEnglishPhrasesViewTests : Test
-practiceEnglishPhrasesViewTests =
+practiceEnglishTests : Test
+practiceEnglishTests =
     practiceActivityTests englishSetup
-
-
-renderingFrenchPhrasesTests : Test
-renderingFrenchPhrasesTests =
-    renderingPhrasesTests frenchSetup
-
-
-renderingEnglishPhrasesTests : Test
-renderingEnglishPhrasesTests =
-    renderingPhrasesTests englishSetup
-
-
-addingFrenchTranslationsTests : Test
-addingFrenchTranslationsTests =
-    addingTranslationsTests frenchSetup
-
-
-addingEnglishTranslationsTests : Test
-addingEnglishTranslationsTests =
-    addingTranslationsTests englishSetup
-
-
-frenchOfflineTests : Test
-frenchOfflineTests =
-    offlineTests { frenchSetup | allSpies = allFrenchOfflineSpies }
-
-
-englishOfflineTests : Test
-englishOfflineTests =
-    offlineTests { englishSetup | allSpies = allEnglishOfflineSpies }
-
-
-frenchUserUuidTests : Test
-frenchUserUuidTests =
-    userUuidTests frenchSetup
-
-
-englishUserUuidTests : Test
-englishUserUuidTests =
-    userUuidTests englishSetup
 
 
 leaderboardTests : Test
@@ -175,12 +142,12 @@ frenchSetup =
     , readEndpoint = "/api/phrases/french"
     , createEndpoint = "/api/phrases/french"
     , updateEndpoint = \str -> "/api/phrases/french/" ++ str
-    , allSpies = allFrenchSpies
     , inputPhrase1 = "c'est simple"
     , inputTranslation1 = "it's simple"
     , inputPhrase2 = "pas de problème"
     , savedPhrase = "bonjour"
     , getItemSpyName = "frenchPhrases"
+    , activity = Activities.FrenchToEnglish
     }
 
 
@@ -193,10 +160,10 @@ englishSetup =
     , readEndpoint = "/api/phrases/english"
     , createEndpoint = "/api/phrases/english"
     , updateEndpoint = \str -> "/api/phrases/english/" ++ str
-    , allSpies = allEnglishSpies
     , inputPhrase1 = "it's simple"
     , inputTranslation1 = "c'est simple"
     , inputPhrase2 = "no problem"
     , savedPhrase = "hello"
     , getItemSpyName = "englishPhrases"
+    , activity = Activities.EnglishToFrench
     }

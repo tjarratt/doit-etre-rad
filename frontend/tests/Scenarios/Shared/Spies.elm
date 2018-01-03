@@ -1,23 +1,25 @@
 module Scenarios.Shared.Spies
     exposing
         ( allOfflineSpies
-        , allHttpSpies
+        , allOnlineSpies
         , adminSpies
         , adminErrorCaseSpies
+        , getItemSpy
         , getItemResponse
-        , uuidForSeed
+        , getUserUuidSpy
+        , getUserUuidResponseSpy
+        , taskSpy
+        , practiceComponentSpy
         )
 
+import Components.PracticePhrases as PracticePhrases
 import Phrases exposing (..)
 import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Json.Decode as JD
 import Json.Encode as JE
-import Random.Pcg exposing (Seed, initialSeed)
 import Task
 import Urls
-import Uuid exposing (uuidGenerator)
-import UuidGenerator
 import Elmer.Platform.Command as Command
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Http
@@ -38,13 +40,11 @@ sharedSpies : List Spy
 sharedSpies =
     [ getItemSpy
     , getItemResponseSpy
-    , setUserUuidSpy
     , getUserUuidSpy
     , getUserUuidResponseSpy
     , savedToLocalStorageSpy
-    , fakeFocusTaskSpy
+    , taskSpy
     , showTooltipSpy
-    , nextUuidSpy
     ]
 
 
@@ -53,8 +53,8 @@ allOfflineSpies endpoint ( _, phrase1, _ ) phrase2 =
     (offlineSpies endpoint phrase1 phrase2) :: sharedSpies
 
 
-allHttpSpies : String -> ( String, String, String ) -> String -> List Spy
-allHttpSpies endpoint ( uuid, newPhrase, translation ) savedPhrase =
+allOnlineSpies : String -> ( String, String, String ) -> String -> List Spy
+allOnlineSpies endpoint ( uuid, newPhrase, translation ) savedPhrase =
     Elmer.Http.serve
         [ stubbedGetResponse endpoint savedPhrase
         , stubbedPostResponse endpoint newPhrase
@@ -120,12 +120,6 @@ longPhrases =
     ]
 
 
-setUserUuidSpy : Spy
-setUserUuidSpy =
-    Spy.create "setUserUuid" (\_ -> LocalStorage.setUserUuid)
-        |> andCallFake (\_ -> Cmd.none)
-
-
 getUserUuidSpy : Spy
 getUserUuidSpy =
     Spy.create "getUserUuid" (\_ -> LocalStorage.getUserUuid)
@@ -157,8 +151,8 @@ fakeFocusTaskPerform input tagger _ =
     Command.fake (tagger input)
 
 
-fakeFocusTaskSpy : Spy
-fakeFocusTaskSpy =
+taskSpy : Spy
+taskSpy =
     Spy.create "taskFocus" (\_ -> Task.perform)
         |> andCallFake (fakeFocusTaskPerform ())
 
@@ -171,24 +165,11 @@ showTooltipSpy =
 
 
 {-
-   Spies for UUIDs
+   Spies for Components
 -}
 
 
-cannedSeed : Seed
-cannedSeed =
-    initialSeed 1
-
-
-uuidForSeed : String
-uuidForSeed =
-    "bc178883-a0ee-487b-8059-30db806ed2a9"
-
-
-nextUuidSpy : Spy
-nextUuidSpy =
-    Spy.create "uuidGenerator.next" (\_ -> UuidGenerator.next)
-        |> andCallFake
-            (\_ ->
-                Random.Pcg.step uuidGenerator cannedSeed
-            )
+practiceComponentSpy : Spy
+practiceComponentSpy =
+    Spy.create "practiceComponentLoadSpy" (\_ -> PracticePhrases.loadComponent)
+        |> andCallFake (\_ -> Cmd.none)

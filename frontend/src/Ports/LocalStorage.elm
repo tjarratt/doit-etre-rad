@@ -5,7 +5,6 @@ port module Ports.LocalStorage
         , setItemResponse
         , getItem
         , getItemResponse
-        , setUserUuid
         , getUserUuid
         , getUserUuidResponse
         , phraseEncoder
@@ -23,7 +22,7 @@ port module Ports.LocalStorage
 
 # Slightly-higher-level wrappers for specific keys (user uuid, phrases, etc...)
 
-@docs setUserUuid, getUserUuid, getUserUuidResponse, saveFrenchPhrases, saveEnglishPhrases
+@docs getUserUuid, getUserUuidResponse, saveFrenchPhrases, saveEnglishPhrases
 
 
 # JSON supports
@@ -135,14 +134,9 @@ port getItem : String -> Cmd msg
 port getItemResponse : (( String, Maybe JE.Value ) -> msg) -> Sub msg
 
 
-{-| a higher-level wrapper around setItem
--}
-port setUserUuid : String -> Cmd msg
-
-
-{-| a slightly more type-safe versin of getItem
+{-| a slightly more type-safe version of getItem
 -}
 port getUserUuid : () -> Cmd msg
 
 
-port getUserUuidResponse : (Maybe String -> msg) -> Sub msg
+port getUserUuidResponse : (String -> msg) -> Sub msg

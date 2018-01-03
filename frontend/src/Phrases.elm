@@ -4,7 +4,6 @@ module Phrases
         , SavedPhrase
         , UnsavedPhrase
         , merge
-        , mergeOne
         , toString
         , phraseEqual
         , translate

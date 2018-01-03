@@ -4,14 +4,10 @@
 ---------------------------
 **Icebox and sundry Tasks**
 ---------------------------
-* refactor more of the app module
-  - addPhrase / phrases into ManageTranslation component
-  - split up current activities more so components aren't always in memory
 * fix hella busted layout ?
   - shh button slightly off-center
-  - word cards
-  - word translations
-* refactor more of the app module
+  - word cards (placement ?)
+  - word translations (length ?)
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
 * think about authentication
   -> want to keep it simple
@@ -30,6 +26,7 @@
   - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
   - https://www.supermemo.com/english/ol/nn_train.htm
 * manual sync ?
+* http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
 
 -----
 

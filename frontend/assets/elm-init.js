@@ -18,12 +18,12 @@
     app.ports.getItemResponse.send([key, json]);
   });
 
-  app.ports.setUserUuid.subscribe(function(uuid) {
-    window.localStorage.setItem("user_uuid", uuid);
-  });
-
   app.ports.getUserUuid.subscribe(function() {
     var uuid = window.localStorage.getItem("user_uuid");
+    if (!uuid) {
+      uuid = uuidv4();
+      window.localStorage.setItem("user_uuid", uuid)
+    }
 
     app.ports.getUserUuidResponse.send(uuid);
   });
@@ -33,4 +33,11 @@
       $('[data-toggle="tooltip"]').tooltip();
     });
   });
+
+  function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
 })();

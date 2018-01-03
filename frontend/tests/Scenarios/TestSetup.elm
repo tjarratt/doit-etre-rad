@@ -1,13 +1,12 @@
 module Scenarios.TestSetup exposing (TestSetup)
 
 import App
+import Activities
 import Elmer
-import Elmer.Spy
 
 
 type alias TestSetup =
-    { allSpies : List Elmer.Spy.Spy
-    , readEndpoint : String
+    { readEndpoint : String
     , createEndpoint : String
     , updateEndpoint : String -> String
     , expectedTitle : String
@@ -20,4 +19,5 @@ type alias TestSetup =
     , savedPhrase : String
     , startActivityScenario :
         Elmer.TestState App.ApplicationState App.Msg -> Elmer.TestState App.ApplicationState App.Msg
+    , activity : Activities.Activity
     }
