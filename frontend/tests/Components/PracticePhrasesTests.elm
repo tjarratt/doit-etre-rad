@@ -104,7 +104,18 @@ addPhraseTests =
                     |> addPhraseToPractice "c'est simple"
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post "/api/phrases/french")
-                        (wasRequested 1)
+                        (Elmer.each <|
+                            hasHeader ( "X-User-Token", defaultUuidString )
+                                <&&>
+                                    hasBody
+                                        (JE.encode 0
+                                            (JE.object
+                                                [ ( "content", JE.string "c'est simple" )
+                                                , ( "translation", JE.string "" )
+                                                ]
+                                            )
+                                        )
+                        )
             )
         , test "offline tooltips are hidden after the word is saved to the backend" <|
             \() ->
