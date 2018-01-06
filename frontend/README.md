@@ -9,6 +9,8 @@
   - word cards (placement ?)
   - word translations (length ?)
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
+* use (!) operator when Cmd.batch has been used excessively
+  - https://github.com/elm-lang/core/blob/4.0.3/src/Platform/Cmd.elm#L64-L66
 * think about authentication
   -> want to keep it simple
   -> maybe allow users to start simply, and then eventually "create" an account
