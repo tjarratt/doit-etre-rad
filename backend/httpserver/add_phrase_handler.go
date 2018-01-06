@@ -3,10 +3,10 @@ package httpserver
 import (
 	"encoding/json"
 	"net/http"
+	"errors"
+	"fmt"
 
 	"github.com/tjarratt/doit-etre-rad/backend/usecases"
-	"fmt"
-	"errors"
 )
 
 type AddPhraseHandler interface {

@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/tjarratt/doit-etre-rad/backend/httpserver/httpserverfakes"
 	"github.com/tjarratt/doit-etre-rad/backend/usecases"
 	"github.com/tjarratt/doit-etre-rad/backend/usecases/usecasesfakes"
-	"github.com/tjarratt/doit-etre-rad/backend/httpserver/httpserverfakes"
 
-	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 )
 
 var _ = Describe("AddPhraseHandler", func() {

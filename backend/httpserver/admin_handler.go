@@ -1,8 +1,8 @@
 package httpserver
 
 import (
-	"errors"
 	json2 "encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/tjarratt/doit-etre-rad/backend/api"
@@ -14,7 +14,7 @@ type AdminHandler interface {
 
 func NewAdminHandler(repository api.AdminRepository, password string) http.Handler {
 	return &adminHandler{
-		password: password,
+		password:   password,
 		repository: repository,
 	}
 }

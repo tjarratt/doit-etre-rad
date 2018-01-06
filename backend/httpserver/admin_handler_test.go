@@ -2,16 +2,16 @@ package httpserver_test
 
 import (
 	"errors"
-	"net/http/httptest"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 
-	"github.com/tjarratt/doit-etre-rad/backend/api/apifakes"
 	"github.com/tjarratt/doit-etre-rad/backend/api"
+	"github.com/tjarratt/doit-etre-rad/backend/api/apifakes"
 
-	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 )
 
 var _ = Describe("AdminHandler", func() {

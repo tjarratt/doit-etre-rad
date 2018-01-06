@@ -1,14 +1,14 @@
 package httpserver_test
 
 import (
-	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 
-	"net/http"
 	"github.com/google/uuid"
-	"strings"
 	"io"
+	"net/http"
+	"strings"
 )
 
 var _ = Describe("AddPhraseParamReader", func() {

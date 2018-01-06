@@ -5,8 +5,8 @@ import (
 )
 
 type PhraseCount struct {
-	UserUUID string `json:"userUuid"`
-	PhraseCount uint `json:"phraseCount"`
+	UserUUID    string `json:"userUuid"`
+	PhraseCount uint   `json:"phraseCount"`
 }
 
 //go:generate counterfeiter . AdminRepository
@@ -19,7 +19,7 @@ func NewAdminRepository(db *sql.DB) AdminRepository {
 }
 
 type adminRepo struct {
-	db         *sql.DB
+	db *sql.DB
 }
 
 func (repo *adminRepo) PhraseCountByUserUUID() ([]PhraseCount, error) {
