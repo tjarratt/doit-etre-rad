@@ -39,8 +39,8 @@ type Msg
     | FlipPhraseCard PhraseViewModel
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
-    | ReceivePhrasesFromBackend (Result Http.Error (List Phrases.SavedPhrase))
     | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
+    | ReceivePhrasesFromBackend (Result Http.Error (List Phrases.SavedPhrase))
     | SetAddPhrase AddPhrase.Msg
 
 
@@ -153,16 +153,6 @@ update msg model =
             in
                 ( model, Cmd.batch [ Bootstrap.showTooltips (), command ] )
 
-        ReceivePhraseFromBackend (Ok phrase) ->
-            let
-                updatedModel =
-                    mergePhraseViewModels model [ Phrases.Saved phrase ]
-            in
-                ( updatedModel, Bootstrap.showTooltips () )
-
-        ReceivePhraseFromBackend _ ->
-            ( model, Cmd.none )
-
         ReceivePhrasesFromBackend (Ok response) ->
             let
                 newPhrases =
@@ -174,6 +164,16 @@ update msg model =
                 ( updatedModel, Bootstrap.showTooltips () )
 
         ReceivePhrasesFromBackend _ ->
+            ( model, Cmd.none )
+
+        ReceivePhraseFromBackend (Ok phrase) ->
+            let
+                updatedModel =
+                    mergePhraseViewModels model [ Phrases.Saved phrase ]
+            in
+                ( updatedModel, Bootstrap.showTooltips () )
+
+        ReceivePhraseFromBackend _ ->
             ( model, Cmd.none )
 
 
@@ -358,52 +358,63 @@ handleDecodedJsonFromLocalStorage model json =
             ( model, Cmd.none )
 
 
-sendPhraseToBackend : Activity -> Uuid.Uuid -> Phrases.Phrase -> Cmd Msg
+sendPhraseToBackend : Activity -> Uuid -> Phrases.Phrase -> Cmd Msg
 sendPhraseToBackend currentActivity uuid phrase =
     let
-        uuidStr =
-            Uuid.toString uuid
-
-        method =
-            case phrase of
-                Phrases.Saved _ ->
-                    "PUT"
-
-                Phrases.Unsaved _ ->
-                    "POST"
-
         endpoint =
             urlForCurrentActivityAndPhrase currentActivity phrase
+    in
+        case phrase of
+            Phrases.Saved savedPhrase ->
+                sendSavedPhraseToBackend savedPhrase endpoint uuid
 
+            Phrases.Unsaved unsavedPhrase ->
+                sendUnsavedPhraseToBackend unsavedPhrase endpoint uuid
+
+
+sendUnsavedPhraseToBackend : Phrases.UnsavedPhrase -> String -> Uuid -> Cmd Msg
+sendUnsavedPhraseToBackend phrase endpoint uuid =
+    let
         jsonValue =
-            case phrase of
-                Phrases.Saved p ->
-                    JE.object
-                        [ ( "uuid", JE.string p.uuid )
-                        , ( "content", JE.string p.content )
-                        , ( "translation", JE.string p.translation )
-                        ]
-
-                Phrases.Unsaved p ->
-                    JE.object
-                        [ ( "content", JE.string p.content )
-                        , ( "translation", JE.string p.translation )
-                        ]
+            JE.object
+                [ ( "content", JE.string phrase.content )
+                , ( "translation", JE.string phrase.translation )
+                ]
 
         config =
-            { method = method
-            , headers = [ Http.header "X-User-Token" uuidStr ]
+            { method = "POST"
+            , headers = [ Http.header "X-User-Token" <| Uuid.toString uuid ]
             , url = endpoint
-            , body = Http.jsonBody jsonValue
+            , body = Http.jsonBody <| JE.list [ jsonValue ]
+            , expect = Http.expectJson <| JD.list savedPhraseDecoder
+            , timeout = Nothing
+            , withCredentials = False
+            }
+    in
+        Http.send ReceivePhrasesFromBackend <| Http.request config
+
+
+sendSavedPhraseToBackend : Phrases.SavedPhrase -> String -> Uuid -> Cmd Msg
+sendSavedPhraseToBackend phrase endpoint uuid =
+    let
+        jsonValue =
+            JE.object
+                [ ( "uuid", JE.string phrase.uuid )
+                , ( "content", JE.string phrase.content )
+                , ( "translation", JE.string phrase.translation )
+                ]
+
+        config =
+            { method = "PUT"
+            , headers = [ Http.header "X-User-Token" <| Uuid.toString uuid ]
+            , url = endpoint
+            , body = Http.jsonBody <| jsonValue
             , expect = Http.expectJson savedPhraseDecoder
             , timeout = Nothing
             , withCredentials = False
             }
-
-        request =
-            Http.request config
     in
-        Http.send ReceivePhraseFromBackend request
+        Http.send ReceivePhraseFromBackend <| Http.request config
 
 
 urlForCurrentActivityAndPhrase : Activity -> Phrases.Phrase -> String

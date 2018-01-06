@@ -17,6 +17,7 @@ type PhraseType string
 const FRENCH_TO_ENGLISH PhraseType = "FRENCH_TO_ENGLISH"
 const ENGLISH_TO_FRENCH PhraseType = "ENGLISH_TO_FRENCH"
 
+//go:generate counterfeiter . PhrasesRepository
 type PhrasesRepository interface {
 	PhrasesForUserWithUUID(uuid.UUID) ([]Phrase, error)
 	AddPhraseForUserWithUUID(string, string, uuid.UUID) (Phrase, error)

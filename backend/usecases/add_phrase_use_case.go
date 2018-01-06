@@ -13,7 +13,7 @@ type PhraseResponse struct {
 
 //go:generate counterfeiter . AddPhraseUseCase
 type AddPhraseUseCase interface {
-	Execute(AddPhraseRequest) (PhraseResponse, error)
+	Execute(AddPhraseRequest) ([]PhraseResponse, error)
 }
 
 func NewAddPhraseUseCase(
@@ -28,13 +28,44 @@ type addPhraseUseCase struct {
 	repository api.PhrasesRepository
 }
 
-func (usecase addPhraseUseCase) Execute(request AddPhraseRequest) (PhraseResponse, error) {
-	phrase, err := usecase.repository.AddPhraseForUserWithUUID(request.Phrase, request.Translation, request.UserUUID)
-	return PhraseResponse(phrase), err
+func (usecase addPhraseUseCase) Execute(request AddPhraseRequest) ([]PhraseResponse, error) {
+	response := []PhraseResponse{}
+	for _, phrase := range request.Phrases {
+		var p api.Phrase
+		var err error
+		if phrase.UUID != nil {
+			p, err = usecase.repository.UpdatePhraseForUserWithUUID(
+				phrase.Phrase,
+				phrase.Translation,
+				*phrase.UUID,
+				request.UserUUID,
+			)
+		} else {
+			p, err = usecase.repository.AddPhraseForUserWithUUID(
+				phrase.Phrase,
+				phrase.Translation,
+				request.UserUUID,
+			)
+		}
+
+		if err != nil {
+			return []PhraseResponse{}, err
+		}
+
+		response = append(response, PhraseResponse(p))
+	}
+
+	return response, nil
+
 }
 
 type AddPhraseRequest struct {
+	UserUUID uuid.UUID
+	Phrases  []AddPhraseItem
+}
+
+type AddPhraseItem struct {
 	Phrase      string
 	Translation string
-	UserUUID    uuid.UUID
+	UUID        *uuid.UUID
 }

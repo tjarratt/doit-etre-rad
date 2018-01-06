@@ -108,12 +108,13 @@ addPhraseTests =
                             hasHeader ( "X-User-Token", defaultUuidString )
                                 <&&>
                                     hasBody
-                                        (JE.encode 0
-                                            (JE.object
-                                                [ ( "content", JE.string "c'est simple" )
-                                                , ( "translation", JE.string "" )
+                                        (JE.encode 0 <|
+                                            JE.list
+                                                [ JE.object
+                                                    [ ( "content", JE.string "c'est simple" )
+                                                    , ( "translation", JE.string "" )
+                                                    ]
                                                 ]
-                                            )
                                         )
                         )
             )
@@ -280,13 +281,12 @@ addingTranslationsTests =
                             hasHeader ( "X-User-Token", defaultUuidString )
                                 <&&>
                                     hasBody
-                                        (JE.encode 0
-                                            (JE.object
+                                        (JE.encode 0 <|
+                                            JE.object
                                                 [ ( "uuid", JE.string "the-uuid" )
                                                 , ( "content", JE.string "c'est simple" )
                                                 , ( "translation", JE.string "it's simple" )
                                                 ]
-                                            )
                                         )
                         )
         , test "the list of phrases is visible again after you translate one" <|

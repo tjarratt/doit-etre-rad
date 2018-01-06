@@ -2,9 +2,9 @@ package httpserver
 
 import (
 	"encoding/json"
-	"net/http"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/tjarratt/doit-etre-rad/backend/usecases"
 )
@@ -29,16 +29,15 @@ type addPhraseHandler struct {
 }
 
 func (handler addPhraseHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	params, err := handler.paramReader.ReadParamsFromRequest(request)
+	params, userUuid, err := handler.paramReader.ReadParamsFromRequest(request)
 	if err != nil {
 		writeError(writer, err, http.StatusBadRequest)
 		return
 	}
 
 	phrase, err := handler.useCase.Execute(usecases.AddPhraseRequest{
-		UserUUID:    params.UserUUID,
-		Phrase:      params.Phrase,
-		Translation: params.Translation,
+		UserUUID: *userUuid,
+		Phrases:  mapPhrases(params),
 	})
 
 	if err != nil {
@@ -53,6 +52,19 @@ func (handler addPhraseHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	}
 
 	writer.Write([]byte(responseBody))
+}
+
+func mapPhrases(params []AddPhraseParams) []usecases.AddPhraseItem {
+	result := []usecases.AddPhraseItem{}
+	for _, p := range params {
+		result = append(result, usecases.AddPhraseItem{
+			Phrase:      p.Phrase,
+			Translation: p.Translation,
+			UUID:        p.UUID,
+		})
+	}
+
+	return result
 }
 
 func writeError(writer http.ResponseWriter, err error, statusCode int) {

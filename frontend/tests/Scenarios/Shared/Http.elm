@@ -46,15 +46,16 @@ stubbedPostResponse : String -> String -> Elmer.Http.HttpResponseStub
 stubbedPostResponse endpoint phrase =
     Elmer.Http.Stub.for (Elmer.Http.Route.post endpoint)
         |> Elmer.Http.Stub.withBody
-            (JE.encode 0
-                (LocalStorage.phraseEncoder
-                    (Saved
-                        { uuid = "uuid_" ++ phrase
-                        , content = phrase
-                        , translation = ""
-                        }
-                    )
-                )
+            (JE.encode 0 <|
+                JE.list
+                    [ LocalStorage.phraseEncoder
+                        (Saved
+                            { uuid = "uuid_" ++ phrase
+                            , content = phrase
+                            , translation = ""
+                            }
+                        )
+                    ]
             )
 
 

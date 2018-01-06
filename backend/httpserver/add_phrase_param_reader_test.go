@@ -5,16 +5,20 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/tjarratt/doit-etre-rad/backend/httpserver"
 
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var _ = Describe("AddPhraseParamReader", func() {
-	var subject AddPhraseParamReader
-	var result AddPhraseParams
-	var resultErr error
+	var (
+		subject    AddPhraseParamReader
+		result     []AddPhraseParams
+		resultUUID *uuid.UUID
+		resultErr  error
+	)
 
 	var request *http.Request
 	var requestBody io.Reader
@@ -27,7 +31,7 @@ var _ = Describe("AddPhraseParamReader", func() {
 
 	subjectAction := func() {
 		subject = NewAddPhraseParamReader()
-		result, resultErr = subject.ReadParamsFromRequest(request)
+		result, resultUUID, resultErr = subject.ReadParamsFromRequest(request)
 	}
 
 	Describe("when the user auth header is provided", func() {
@@ -35,7 +39,7 @@ var _ = Describe("AddPhraseParamReader", func() {
 		var expectedUUID = uuid.Must(uuid.Parse("e2580a5b-cabb-4387-bcea-30e9401a2aa4"))
 
 		BeforeEach(func() {
-			requestBody = strings.NewReader(`{"content": "the-phrase", "translation": "the-translation"}`)
+			requestBody = strings.NewReader(`[{"content": "the-phrase", "translation": "the-translation"}, {"content": "old-phrase", "translation": "i18n", "uuid": "256499fb-770c-4805-bd0e-16e4f37a561c"}]`)
 		})
 
 		JustBeforeEach(func() {
@@ -46,25 +50,43 @@ var _ = Describe("AddPhraseParamReader", func() {
 		It("returns an object wrapping the provided parameters", func() {
 			Expect(resultErr).NotTo(HaveOccurred())
 
-			Expect(result.Phrase).To(Equal("the-phrase"))
-			Expect(result.Translation).To(Equal("the-translation"))
-			Expect(result.UserUUID).To(Equal(expectedUUID))
+			Expect(result).To(HaveLen(2))
+			Expect(result[0].Phrase).To(Equal("the-phrase"))
+			Expect(result[0].Translation).To(Equal("the-translation"))
+			Expect(*resultUUID).To(Equal(expectedUUID))
+
+			Expect(result[1].Phrase).To(Equal("old-phrase"))
+			Expect(result[1].Translation).To(Equal("i18n"))
+			Expect(*result[1].UUID).To(Equal(uuid.Must(uuid.Parse("256499fb-770c-4805-bd0e-16e4f37a561c"))))
 		})
 
 		Context("when a translation is not provided", func() {
 			BeforeEach(func() {
-				requestBody = strings.NewReader(`{"content": "the-phrase"}`)
+				requestBody = strings.NewReader(`[{"content": "the-phrase"}]`)
 			})
 
 			It("defaults the translation to an empty string when it is not provided", func() {
 				Expect(resultErr).NotTo(HaveOccurred())
-				Expect(result.Translation).To(BeEmpty())
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Phrase).To(Equal("the-phrase"))
+				Expect(result[0].Translation).To(BeEmpty())
+				Expect(*resultUUID).To(Equal(expectedUUID))
 			})
 		})
 
 		Context("when no phrase is specified", func() {
 			BeforeEach(func() {
-				requestBody = strings.NewReader(`{}`)
+				requestBody = strings.NewReader(`[{"translation": "whoopsie"}]`)
+			})
+
+			It("returns an error", func() {
+				Expect(resultErr).To(HaveOccurred())
+			})
+		})
+
+		Context("when an empty list is provided", func() {
+			BeforeEach(func() {
+				requestBody = strings.NewReader(`[]`)
 			})
 
 			It("returns an error", func() {
@@ -85,7 +107,7 @@ var _ = Describe("AddPhraseParamReader", func() {
 
 	Describe("when the user auth header is not a uuid", func() {
 		BeforeEach(func() {
-			requestBody = strings.NewReader(`{"content": "the-phrase", "translation": "the-translation"}`)
+			requestBody = strings.NewReader(`[{"content": "the-phrase", "translation": "the-translation"}]`)
 		})
 
 		JustBeforeEach(func() {
@@ -100,7 +122,7 @@ var _ = Describe("AddPhraseParamReader", func() {
 
 	Describe("when the user auth header is missing entirely", func() {
 		BeforeEach(func() {
-			requestBody = strings.NewReader(`{"content": "the-phrase", "translation": "the-translation"}`)
+			requestBody = strings.NewReader(`[{"content": "the-phrase", "translation": "the-translation"}]`)
 		})
 
 		JustBeforeEach(func() {
