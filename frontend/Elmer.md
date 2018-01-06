@@ -16,3 +16,8 @@ Things I believe about Elmer
     or even
         '#container tag:pseudo-selector'
     it actually selects the first 'tag' in '#container'
+* spies
+  -> turns out that you can't add a spy for a second module right now
+     Assume you're testing App, which in turns uses a Component module.
+     Component.update creates a Task, which elmer needs to be stubbed.
+     Unfortunately, the spies you register are not seen at runtime by elmer.
