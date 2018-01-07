@@ -15,21 +15,24 @@
   -> want to keep it simple
   -> maybe allow users to start simply, and then eventually "create" an account
 * upgrade to new way of creating css with elm-css
+  -> https://github.com/rtfeldman/elm-css
 * fix even more lint errors ?
+  -> maybe stop using a weak linter that can't even manage to reach our source files ?
 * after saving from backend, local storage is out of date
   -> most recent phrase is still "unsaved" :-\
   -> yes, yes, yes, but ... IS THIS A PROBLEM ?
 * focus input when navigating between apps on iOS
   -> ("pageshow" event, see "safariwebcontent" docs on handling events)
-* delete items from list
+* user can delete items from list
 * reverse sort phrases so I see newest ones at top
-* edit the phrase to be translated ?
+* edit phrases themselves ?
 * shake on validation error (with messages)
+  -> applies to input being empty, as far as I can recall
 * spaced repetition for practice
   - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
   - https://www.supermemo.com/english/ol/nn_train.htm
-
-* http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
+* single page app guidelines for csrf
+  -> http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
 
 -----
 
