@@ -60,7 +60,13 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 			return []AddPhraseParams{}, nil, errors.New("could not read phrase from request body")
 		}
 
-		phraseUUID, _ := uuid.Parse(obj["uuid"])
+		var phraseUUID *uuid.UUID
+		parsedUUID, err := uuid.Parse(obj["uuid"])
+		if err != nil {
+			phraseUUID = nil
+		} else {
+			phraseUUID = &parsedUUID
+		}
 
 		translation, ok := obj["translation"]
 		if !ok {
@@ -68,7 +74,7 @@ func (paramReader addPhraseParamReader) ReadParamsFromRequest(
 		}
 
 		params = append(params, AddPhraseParams{
-			UUID:        &phraseUUID,
+			UUID:        phraseUUID,
 			Phrase:      content,
 			Translation: translation,
 		})

@@ -51,9 +51,11 @@ var _ = Describe("AddPhraseParamReader", func() {
 			Expect(resultErr).NotTo(HaveOccurred())
 
 			Expect(result).To(HaveLen(2))
+			Expect(*resultUUID).To(Equal(expectedUUID))
+
 			Expect(result[0].Phrase).To(Equal("the-phrase"))
 			Expect(result[0].Translation).To(Equal("the-translation"))
-			Expect(*resultUUID).To(Equal(expectedUUID))
+			Expect(result[0].UUID).To(BeNil())
 
 			Expect(result[1].Phrase).To(Equal("old-phrase"))
 			Expect(result[1].Translation).To(Equal("i18n"))
