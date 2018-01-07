@@ -40,8 +40,14 @@ type Msg
     | ReceiveFromLocalStorage ( String, Maybe JD.Value )
     | DidSaveToLocalStorage JD.Value
     | ReceivePhraseFromBackend (Result Http.Error Phrases.SavedPhrase)
-    | ReceivePhrasesFromBackend (Result Http.Error (List Phrases.SavedPhrase))
+    | ReceivePhrasesFromBackend RequestMode (Result Http.Error (List Phrases.SavedPhrase))
     | SetAddPhrase AddPhrase.Msg
+    | StartOnlineSync
+
+
+type RequestMode
+    = Syncing
+    | NotSyncing
 
 
 type alias Model =
@@ -50,6 +56,7 @@ type alias Model =
     , phrases : List PhraseViewModel
     , currentTranslation : String
     , activity : Activity
+    , errorSyncing : Bool
     }
 
 
@@ -84,6 +91,7 @@ defaultModel uuid activity =
     , userUuid = uuid
     , activity = activity
     , addPhrase = AddPhrase.defaultModel activity
+    , errorSyncing = False
     }
 
 
@@ -120,6 +128,9 @@ update msg model =
                     ]
                 )
 
+        StartOnlineSync ->
+            ( model, syncUnsavedPhrasesToBackend model )
+
         FlipPhraseCard phrase ->
             flipCardMatchingPhrase model phrase
 
@@ -153,7 +164,7 @@ update msg model =
             in
                 ( model, Cmd.batch [ Bootstrap.showTooltips (), command ] )
 
-        ReceivePhrasesFromBackend (Ok response) ->
+        ReceivePhrasesFromBackend mode (Ok response) ->
             let
                 newPhrases =
                     List.map (\p -> Phrases.Saved p) response
@@ -161,10 +172,15 @@ update msg model =
                 updatedModel =
                     mergePhraseViewModels model newPhrases
             in
-                ( updatedModel, Bootstrap.showTooltips () )
+                ( { updatedModel | errorSyncing = False }, Bootstrap.showTooltips () )
 
-        ReceivePhrasesFromBackend _ ->
-            ( model, Cmd.none )
+        ReceivePhrasesFromBackend mode _ ->
+            case mode of
+                Syncing ->
+                    ( { model | errorSyncing = True }, Cmd.none )
+
+                NotSyncing ->
+                    ( model, Cmd.none )
 
         ReceivePhraseFromBackend (Ok phrase) ->
             let
@@ -369,29 +385,34 @@ sendPhraseToBackend currentActivity uuid phrase =
                 sendSavedPhraseToBackend savedPhrase endpoint uuid
 
             Phrases.Unsaved unsavedPhrase ->
-                sendUnsavedPhraseToBackend unsavedPhrase endpoint uuid
+                sendUnsavedPhrasesToBackend NotSyncing [ unsavedPhrase ] endpoint uuid
 
 
-sendUnsavedPhraseToBackend : Phrases.UnsavedPhrase -> String -> Uuid -> Cmd Msg
-sendUnsavedPhraseToBackend phrase endpoint uuid =
+sendUnsavedPhrasesToBackend : RequestMode -> List Phrases.UnsavedPhrase -> String -> Uuid -> Cmd Msg
+sendUnsavedPhrasesToBackend mode phrases endpoint uuid =
     let
         jsonValue =
-            JE.object
-                [ ( "content", JE.string phrase.content )
-                , ( "translation", JE.string phrase.translation )
-                ]
+            JE.list <|
+                List.map
+                    (\phrase ->
+                        JE.object
+                            [ ( "content", JE.string phrase.content )
+                            , ( "translation", JE.string phrase.translation )
+                            ]
+                    )
+                    phrases
 
         config =
             { method = "POST"
             , headers = [ Http.header "X-User-Token" <| Uuid.toString uuid ]
             , url = endpoint
-            , body = Http.jsonBody <| JE.list [ jsonValue ]
+            , body = Http.jsonBody <| jsonValue
             , expect = Http.expectJson <| JD.list savedPhraseDecoder
             , timeout = Nothing
             , withCredentials = False
             }
     in
-        Http.send ReceivePhrasesFromBackend <| Http.request config
+        Http.send (ReceivePhrasesFromBackend mode) <| Http.request config
 
 
 sendSavedPhraseToBackend : Phrases.SavedPhrase -> String -> Uuid -> Cmd Msg
@@ -473,16 +494,40 @@ getPhrasesFromBackend model =
             , timeout = Nothing
             , withCredentials = False
             }
-
-        request =
-            Http.request config
     in
-        Http.send ReceivePhrasesFromBackend request
+        Http.send (ReceivePhrasesFromBackend NotSyncing) <| Http.request config
 
 
 readUrlForCurrentActivity : Activity -> String
 readUrlForCurrentActivity activity =
     baseUrlForCurrentActivity activity
+
+
+syncUnsavedPhrasesToBackend : Model -> Cmd Msg
+syncUnsavedPhrasesToBackend model =
+    let
+        endpoint =
+            baseUrlForCurrentActivity model.activity
+
+        unsavedFilter : List PhraseViewModel -> List Phrases.UnsavedPhrase
+        unsavedFilter viewModel =
+            List.filterMap
+                ((\viewModel -> viewModel.phrase)
+                    >> \phrase ->
+                        case phrase of
+                            Phrases.Unsaved p ->
+                                Just p
+
+                            Phrases.Saved _ ->
+                                Nothing
+                )
+                viewModel
+
+        phrasesToSync =
+            unsavedFilter
+                model.phrases
+    in
+        sendUnsavedPhrasesToBackend Syncing phrasesToSync endpoint model.userUuid
 
 
 
@@ -497,21 +542,80 @@ view : Model -> Html Msg
 view model =
     case model.activity of
         FrenchToEnglish ->
-            Html.div []
-                [ Html.h1 [] [ Html.text "Practicing French phrases" ]
-                , AddPhrase.view model.addPhrase SetAddPhrase
-                , phraseListView model
-                ]
+            activityView model.activity model
 
         EnglishToFrench ->
-            Html.div []
-                [ Html.h1 [] [ Html.text "Practicing English phrases" ]
-                , AddPhrase.view model.addPhrase SetAddPhrase
-                , phraseListView model
-                ]
+            activityView model.activity model
 
         DifferentiateFrenchWords ->
             Html.div [] [ Html.text "Not done yet ..." ]
+
+
+activityView : Activity -> Model -> Html Msg
+activityView activity model =
+    Html.div []
+        [ Html.h1 [ id IndexCss.PracticePhrases ] [ Html.text <| headerForActivity activity ]
+        , AddPhrase.view model.addPhrase SetAddPhrase
+        , errorView model.errorSyncing model.phrases
+        , phraseListView model
+        ]
+
+
+headerForActivity : Activity -> String
+headerForActivity activity =
+    case activity of
+        FrenchToEnglish ->
+            "Practicing French phrases"
+
+        EnglishToFrench ->
+            "Practicing English phrases"
+
+        _ ->
+            Debug.crash "whoops"
+
+
+errorView : Bool -> List PhraseViewModel -> Html Msg
+errorView failedLastSync viewModels =
+    let
+        unsaved =
+            List.filter (\viewModel -> notYetPersisted viewModel.phrase) viewModels
+    in
+        case List.length unsaved of
+            0 ->
+                Html.div [] []
+
+            n ->
+                Html.div
+                    [ id IndexCss.Errors
+                    , Html.Attributes.class "text-center"
+                    , Html.Attributes.class "bg-danger"
+                    ]
+                    [ Html.div [] [ Html.text <| errorMessage n failedLastSync ]
+                    , Html.button
+                        [ Html.Events.onClick StartOnlineSync
+                        , Html.Attributes.class "btn"
+                        , Html.Attributes.class "btn-success"
+                        ]
+                        [ Html.text "Sync now" ]
+                    ]
+
+
+errorMessage : Int -> Bool -> String
+errorMessage howMany failedLastSync =
+    if failedLastSync then
+        "Last sync of " ++ (toString howMany) ++ " phrase(s) failed. Try again ?"
+    else
+        "You have " ++ (toString howMany) ++ " unsaved phrase(s)"
+
+
+notYetPersisted : Phrase -> Bool
+notYetPersisted phrase =
+    case phrase of
+        Phrases.Saved savedPhrase ->
+            False
+
+        Phrases.Unsaved unsavedPhrase ->
+            True
 
 
 phraseListView : Model -> Html Msg

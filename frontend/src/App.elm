@@ -129,12 +129,13 @@ activityButton title idAttr msg =
 
 landingPageButton : Html Msg
 landingPageButton =
-    Html.button
-        [ id IndexCss.SecretButton
-        , Html.Attributes.class "btn btn-default"
-        , Html.Events.onClick NavigateToLeaderboard
+    Html.div [ id IndexCss.SecretButton ]
+        [ Html.button
+            [ Html.Attributes.class "btn btn-default"
+            , Html.Events.onClick NavigateToLeaderboard
+            ]
+            [ Html.text "shh..." ]
         ]
-        [ Html.text "shh..." ]
 
 
 {-| Modifies application state in response to messages from components

@@ -18,7 +18,8 @@
 * fix even more lint errors ?
 * after saving from backend, local storage is out of date
   -> most recent phrase is still "unsaved" :-\
-* focus input when page is shown
+  -> yes, yes, yes, but ... IS THIS A PROBLEM ?
+* focus input when navigating between apps on iOS
   -> ("pageshow" event, see "safariwebcontent" docs on handling events)
 * delete items from list
 * reverse sort phrases so I see newest ones at top
@@ -27,7 +28,7 @@
 * spaced repetition for practice
   - https://www.quora.com/Whats-the-best-spaced-repetition-schedule
   - https://www.supermemo.com/english/ol/nn_train.htm
-* manual sync ?
+
 * http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
 
 -----

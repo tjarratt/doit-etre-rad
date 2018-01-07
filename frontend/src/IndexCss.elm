@@ -23,6 +23,7 @@ type CssIds
     = LandingPage
     | Modes
     | AddPhraseForm
+    | PracticePhrases
     | AddWordLabel
     | AddWordInput
     | AddWordSaveButton
@@ -44,6 +45,10 @@ css =
         , id SecretButton
             [ position absolute
             , bottom (px 10)
+            ]
+        , id Errors
+            [ borderRadius (px 8)
+            , padding (px 10)
             ]
         , id AddPhraseForm
             [ margin (px 20)
@@ -108,6 +113,7 @@ css =
             -- applies only to back
             , property "transform" "rotateY(180deg)"
             ]
+        , id AdminSection [ textAlign center ]
         , class LeaderboardItem
             [ marginRight (px 10) ]
         ]

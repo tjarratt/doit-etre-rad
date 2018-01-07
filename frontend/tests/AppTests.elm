@@ -81,7 +81,7 @@ leaderboardTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use adminSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#SecretButton"
+                    |> Markup.target "#SecretButton button"
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Markup.expect elementExists
@@ -90,7 +90,7 @@ leaderboardTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use adminSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#SecretButton"
+                    |> Markup.target "#SecretButton button"
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "super secret password"
@@ -104,7 +104,7 @@ leaderboardTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use adminSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#SecretButton"
+                    |> Markup.target "#SecretButton button"
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "super secret password"
@@ -121,7 +121,7 @@ leaderboardTests =
                 Elmer.given defaultModel App.view App.update
                     |> Spy.use adminErrorCaseSpies
                     |> Subscription.with (\() -> App.subscriptions)
-                    |> Markup.target "#SecretButton"
+                    |> Markup.target "#SecretButton button"
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "whoops i accidentally all the things"

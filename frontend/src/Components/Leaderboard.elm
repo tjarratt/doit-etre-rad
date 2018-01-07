@@ -152,7 +152,9 @@ passwordFieldView wrapper =
             ]
             []
         , Html.button
-            [ Html.Events.onClick <| wrapper RequestToBackend ]
+            [ Html.Events.onClick <| wrapper RequestToBackend
+            , Html.Attributes.class "btn btn-primary"
+            ]
             [ Html.text "Submit" ]
         ]
 

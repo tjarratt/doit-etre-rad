@@ -2,6 +2,7 @@ module PracticePhrasesTests
     exposing
         ( addPhraseTests
         , renderingPhrasesTests
+        , onlineTests
         , offlineTests
         , addingTranslationsTests
         )
@@ -20,7 +21,7 @@ import Elmer.Platform.Subscription as Subscription
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
 import Json.Encode as JE
-import Scenarios exposing (addPhraseToPractice, addTranslation, clickAddPhraseButton, clickPhrase, editPhrase, typePhrase)
+import Scenarios exposing (addPhraseToPractice, addTranslation, addUnsavedTranslation, clickAddPhraseButton, clickPhrase, editPhrase, typePhrase)
 import Scenarios.French exposing (allFrenchOfflineSpies, allFrenchSpies)
 import Scenarios.Shared.Spies exposing (getItemResponse)
 import Test exposing (Test, describe, test)
@@ -162,6 +163,26 @@ renderingPhrasesTests =
         ]
 
 
+onlineTests : Test
+onlineTests =
+    describe "when the user is online"
+        [ test "they should not see any message to sync" <|
+            \() ->
+                Elmer.given userPracticingFrench Component.view Component.update
+                    |> Spy.use allFrenchOfflineSpies
+                    |> Subscription.with (\() -> Component.subscriptions)
+                    |> Markup.target "#PracticePhrases"
+                    |> Markup.expect (expectNot <| element <| hasText "You have 0 unsaved phrase(s)")
+        , test "they should not see a sync button" <|
+            \() ->
+                Elmer.given userPracticingFrench Component.view Component.update
+                    |> Spy.use allFrenchOfflineSpies
+                    |> Subscription.with (\() -> Component.subscriptions)
+                    |> Markup.target "#Errors button"
+                    |> Markup.expect (expectNot <| elementExists)
+        ]
+
+
 offlineTests : Test
 offlineTests =
     describe "when the user is offline"
@@ -177,13 +198,68 @@ offlineTests =
                             (element <|
                                 hasClass "glyphicon-exclamation-sign"
                             )
-            , test ", and they add a phrase, the bootstrap tooltips are rendered through a js port" <|
+            , test "the bootstrap tooltips are rendered through a js port" <|
                 \() ->
                     Elmer.given userPracticingFrench Component.view Component.update
                         |> Spy.use allFrenchOfflineSpies
                         |> Subscription.with (\() -> Component.subscriptions)
                         |> addPhraseToPractice "je suis hors-ligne"
-                        |> Spy.expect "bootstrapTooltips" (wasCalled 1)
+                        |> Spy.expect "bootstrapTooltips"
+                            (wasCalled 1)
+            , test "the user should see a running count of how many phrases are unsaved" <|
+                \() ->
+                    Elmer.given userPracticingFrench Component.view Component.update
+                        |> Spy.use allFrenchOfflineSpies
+                        |> Subscription.with (\() -> Component.subscriptions)
+                        |> addPhraseToPractice "je suis hors-ligne"
+                        |> addPhraseToPractice "toujours hors-ligne"
+                        |> addPhraseToPractice "pour toujours et à jamais hors-ligne"
+                        |> Markup.target "#Errors"
+                        |> Markup.expect
+                            (element <|
+                                hasText "You have 3 unsaved phrase(s)"
+                            )
+            , test "the user should be able to POST the unsaved phrases to our backend" <|
+                \() ->
+                    Elmer.given userPracticingFrench Component.view Component.update
+                        |> Spy.use allFrenchOfflineSpies
+                        |> Subscription.with (\() -> Component.subscriptions)
+                        |> addPhraseToPractice "je suis hors-ligne"
+                        |> addPhraseToPractice "toujours hors-ligne"
+                        |> addPhraseToPractice "pour toujours et à jamais hors-ligne"
+                        |> addUnsavedTranslation "je suis hors-ligne" "i am offline"
+                        |> Markup.target "#Errors button"
+                        |> Event.click
+                        |> Elmer.Http.expectThat
+                            (Elmer.Http.Route.post <| "/api/phrases/french")
+                            (Elmer.some <|
+                                hasHeader ( "X-User-Token", defaultUuidString )
+                                    <&&>
+                                        hasBody
+                                            (JE.encode 0 <|
+                                                jsonListOfPhrases
+                                                    [ ( "je suis hors-ligne", "i am offline" )
+                                                    , ( "toujours hors-ligne", "" )
+                                                    , ( "pour toujours et à jamais hors-ligne", "" )
+                                                    ]
+                                            )
+                            )
+            , test "the user sees a failure when the sync fails" <|
+                \() ->
+                    Elmer.given userPracticingFrench Component.view Component.update
+                        |> Spy.use allFrenchOfflineSpies
+                        |> Subscription.with (\() -> Component.subscriptions)
+                        |> addPhraseToPractice "je suis hors-ligne"
+                        |> addPhraseToPractice "toujours hors-ligne"
+                        |> addPhraseToPractice "pour toujours et à jamais hors-ligne"
+                        |> addUnsavedTranslation "je suis hors-ligne" "i am offline"
+                        |> Markup.target "#Errors button"
+                        |> Event.click
+                        |> Markup.target "#Errors"
+                        |> Markup.expect
+                            (element <|
+                                hasText "Last sync of 3 phrase(s) failed. Try again ?"
+                            )
             ]
         , describe "and the component loads"
             [ test "existing phrases in local storage get the special icon treatment too" <|
@@ -371,3 +447,18 @@ defaultUuid =
 defaultUuidString : String
 defaultUuidString =
     "2a09efcb-514d-4ce2-a5db-8fc7edc984fb"
+
+
+jsonListOfPhrases : List ( String, String ) -> JE.Value
+jsonListOfPhrases pairs =
+    JE.list
+        (List.map
+            (\( content, translation ) ->
+                (JE.object
+                    [ ( "content", JE.string content )
+                    , ( "translation", JE.string translation )
+                    ]
+                )
+            )
+            pairs
+        )

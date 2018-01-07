@@ -8,6 +8,7 @@ module Phrases
         , phraseEqual
         , translate
         , translationOf
+        , isUnsaved
         )
 
 import List
@@ -29,11 +30,6 @@ type alias UnsavedPhrase =
     { content : String
     , translation : String
     }
-
-
-mergeOne : List Phrase -> Phrase -> List Phrase
-mergeOne old new =
-    merge old [ new ]
 
 
 merge : List Phrase -> List Phrase -> List Phrase
@@ -76,26 +72,10 @@ splitPhrases : List Phrase -> ( List Phrase, List Phrase )
 splitPhrases phrases =
     let
         filterSaved =
-            List.filter
-                (\phrase ->
-                    case phrase of
-                        Unsaved _ ->
-                            False
-
-                        Saved _ ->
-                            True
-                )
+            List.filter <| not << isUnsaved
 
         filterUnsaved =
-            List.filter
-                (\phrase ->
-                    case phrase of
-                        Unsaved _ ->
-                            True
-
-                        Saved _ ->
-                            False
-                )
+            List.filter isUnsaved
     in
         ( (filterSaved phrases), (filterUnsaved phrases) )
 
@@ -150,3 +130,13 @@ translate phrase translation =
 
         Unsaved unsavedPhrase ->
             Unsaved { unsavedPhrase | translation = translation }
+
+
+isUnsaved : Phrase -> Bool
+isUnsaved phrase =
+    case phrase of
+        Saved savedPhrase ->
+            False
+
+        Unsaved unsavedPhrase ->
+            True

@@ -6,6 +6,7 @@ module Scenarios
         , clickAddPhraseButton
         , addPhraseToPractice
         , addTranslation
+        , addUnsavedTranslation
         , clickPhrase
         , editPhrase
         )
@@ -64,6 +65,16 @@ addTranslation uuid phrase translation testState =
         |> typeTranslation translation
         |> saveTranslation
         |> Subscription.send "savedToLocalStorageEffect" (savedLocalStorageResponse uuid phrase translation)
+
+
+addUnsavedTranslation : String -> String -> Elmer.TestState a b -> Elmer.TestState a b
+addUnsavedTranslation phrase translation testState =
+    -- adds the given translation to the FIRST phrase in the list
+    testState
+        |> clickPhrase
+        |> editPhrase
+        |> typeTranslation translation
+        |> saveTranslation
 
 
 clickPhrase : Elmer.TestState a b -> Elmer.TestState a b

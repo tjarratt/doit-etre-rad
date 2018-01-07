@@ -1,4 +1,11 @@
-module PhrasesTests exposing (translateTests, mergeTests, equalTests, toStringTests)
+module PhrasesTests
+    exposing
+        ( translateTests
+        , mergeTests
+        , equalTests
+        , toStringTests
+        , isUnsavedTests
+        )
 
 import Expect
 import Test exposing (Test, describe, test)
@@ -205,4 +212,24 @@ toStringTests =
                         Unsaved { content = "hello world", translation = "" }
                 in
                     Expect.equal "hello world" (Phrases.toString phrase)
+        ]
+
+
+isUnsavedTests : Test
+isUnsavedTests =
+    describe "isUnsaved"
+        [ test "returns true for unsaved phrases" <|
+            \() ->
+                let
+                    phrase =
+                        Unsaved { content = "", translation = "" }
+                in
+                    Expect.equal True <| Phrases.isUnsaved phrase
+        , test "returns false for saved phrases" <|
+            \() ->
+                let
+                    phrase =
+                        Saved { content = "", translation = "", uuid = "" }
+                in
+                    Expect.equal False <| Phrases.isUnsaved phrase
         ]
