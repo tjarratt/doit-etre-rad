@@ -9,10 +9,10 @@ cd $(dirname $0)/..
 mkdir -p logs
 
 # start backend
-$(./backend/scripts/start.sh > logs/frontend.log &)
+$(./backend/scripts/start.sh > logs/backend.log &)
 
 # start frontend
-$(./frontend/scripts/start.sh > logs/backend.log &)
+$(./frontend/scripts/start.sh > logs/frontend.log &)
 
 # start nginx
 nginx -c $(pwd)/nginx_proxy.conf
