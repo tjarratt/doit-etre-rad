@@ -5,11 +5,11 @@ module Scenarios.Shared
         )
 
 import App
-import Elmer exposing ((<&&>), atIndex, hasLength)
+import Elmer
 import Elmer.Platform.Subscription as Subscription
-import Elmer.Spy as Spy exposing (Spy, andCallFake)
-import Elmer.Spy.Matchers exposing (stringArg, typedArg, wasCalled, wasCalledWith)
-import Scenarios.French exposing (allFrenchOfflineSpies, allFrenchSpies)
+import Elmer.Spy as Spy exposing (Spy)
+import Elmer.Spy.Matchers exposing (wasCalled)
+import Scenarios.French exposing (allFrenchSpies)
 import Scenarios.Shared.Spies exposing (practiceComponentSpy)
 import Scenarios.TestSetup exposing (TestSetup)
 import Test exposing (describe, test, Test)
