@@ -22,7 +22,7 @@
     var uuid = window.localStorage.getItem("user_uuid");
     if (!uuid) {
       uuid = uuidv4();
-      window.localStorage.setItem("user_uuid", uuid)
+      window.localStorage.setItem("user_uuid", uuid);
     }
 
     app.ports.getUserUuidResponse.send(uuid);
