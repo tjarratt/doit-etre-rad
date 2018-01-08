@@ -32,7 +32,7 @@ elm install
 popd
 
 # install various packages
-elm package install
+elm package install --yes
 
 popd # done with frontend 
 
