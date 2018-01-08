@@ -41,5 +41,5 @@ brew install go
 brew install nginx
 
 pushd backend
-go get -u ./... 
+go get -u -t ./... 
 popd
