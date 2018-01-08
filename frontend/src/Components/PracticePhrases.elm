@@ -106,7 +106,7 @@ update msg model =
             ( model, Cmd.none )
 
         ComponentDidLoad ->
-            ( model, fetchPhrasesFromLocalStorageAndRenderTooltips model )
+            fetchPhrasesFromLocalStorageAndRenderTooltips model
 
         SetAddPhrase addPhraseMsg ->
             let
@@ -121,12 +121,7 @@ update msg model =
                 ( newModel, newCmd ) =
                     processAddPhraseMsg outMsg updatedModel
             in
-                ( newModel
-                , Cmd.batch
-                    [ Cmd.map SetAddPhrase childMsg
-                    , newCmd
-                    ]
-                )
+                newModel ! [ Cmd.map SetAddPhrase childMsg, newCmd ]
 
         StartOnlineSync ->
             ( model, syncUnsavedPhrasesToBackend model )
@@ -150,19 +145,7 @@ update msg model =
             handleValueFromLocalStorage model key value
 
         DidSaveToLocalStorage encodedPhrase ->
-            let
-                command =
-                    case JD.decodeValue LocalStorage.phraseDecoder encodedPhrase of
-                        Ok phrase ->
-                            sendPhraseToBackend
-                                model.activity
-                                model.userUuid
-                                phrase
-
-                        _ ->
-                            Cmd.none
-            in
-                ( model, Cmd.batch [ Bootstrap.showTooltips (), command ] )
+            didSaveToLocalStorage model encodedPhrase
 
         ReceivePhrasesFromBackend mode (Ok response) ->
             let
@@ -198,12 +181,12 @@ loadComponent _ =
     Task.perform identity <| Task.succeed ComponentDidLoad
 
 
-fetchPhrasesFromLocalStorageAndRenderTooltips : Model -> Cmd Msg
+fetchPhrasesFromLocalStorageAndRenderTooltips : Model -> ( Model, Cmd Msg )
 fetchPhrasesFromLocalStorageAndRenderTooltips model =
-    Cmd.batch
-        [ LocalStorage.getItem <| localStorageKey model.activity
-        , Bootstrap.showTooltips ()
-        ]
+    model
+        ! [ LocalStorage.getItem <| localStorageKey model.activity
+          , Bootstrap.showTooltips ()
+          ]
 
 
 localStorageKey : Activity -> String
@@ -217,6 +200,23 @@ localStorageKey activity =
 
         DifferentiateFrenchWords ->
             "whoops"
+
+
+didSaveToLocalStorage : Model -> JE.Value -> ( Model, Cmd Msg )
+didSaveToLocalStorage model encodedPhrase =
+    let
+        command =
+            case JD.decodeValue LocalStorage.phraseDecoder encodedPhrase of
+                Ok phrase ->
+                    sendPhraseToBackend
+                        model.activity
+                        model.userUuid
+                        phrase
+
+                _ ->
+                    Cmd.none
+    in
+        model ! [ Bootstrap.showTooltips (), command ]
 
 
 processAddPhraseMsg : AddPhrase.OutMsg -> Model -> ( Model, Cmd Msg )
@@ -263,9 +263,7 @@ persistCurrentPhrase model newPhrase =
                 _ ->
                     Cmd.none
     in
-        ( updatedModel
-        , Cmd.batch [ focusInput, saveInLocalStorage ]
-        )
+        updatedModel ! [ focusInput, saveInLocalStorage ]
 
 
 flipCardMatchingPhrase : Model -> PhraseViewModel -> ( Model, Cmd Msg )
