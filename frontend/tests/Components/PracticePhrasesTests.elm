@@ -23,6 +23,7 @@ import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
 import Json.Encode as JE
 import Scenarios exposing (addPhraseToPractice, addTranslation, addUnsavedTranslation, clickAddPhraseButton, clickPhrase, editPhrase, typePhrase)
 import Scenarios.French exposing (allFrenchOfflineSpies, allFrenchSpies)
+import Scenarios.Shared exposing (loggedInUserUuid, loggedInUserUuidString)
 import Scenarios.Shared.Spies exposing (getItemResponse)
 import Test exposing (Test, describe, test)
 import Uuid exposing (Uuid)
@@ -106,7 +107,7 @@ addPhraseTests =
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.post "/api/phrases/french")
                         (Elmer.each <|
-                            hasHeader ( "X-User-Token", defaultUuidString )
+                            hasHeader ( "X-User-Token", loggedInUserUuidString )
                                 <&&>
                                     hasBody
                                         (JE.encode 0 <|
@@ -233,7 +234,7 @@ offlineTests =
                         |> Elmer.Http.expectThat
                             (Elmer.Http.Route.post <| "/api/phrases/french")
                             (Elmer.some <|
-                                hasHeader ( "X-User-Token", defaultUuidString )
+                                hasHeader ( "X-User-Token", loggedInUserUuidString )
                                     <&&>
                                         hasBody
                                             (JE.encode 0 <|
@@ -354,7 +355,7 @@ addingTranslationsTests =
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.put <| "/api/phrases/french/the-uuid")
                         (Elmer.each <|
-                            hasHeader ( "X-User-Token", defaultUuidString )
+                            hasHeader ( "X-User-Token", loggedInUserUuidString )
                                 <&&>
                                     hasBody
                                         (JE.encode 0 <|
@@ -419,7 +420,7 @@ addingTranslationsTests =
 
 userPracticingFrench : Component.Model
 userPracticingFrench =
-    Component.defaultModel defaultUuid FrenchToEnglish
+    Component.defaultModel loggedInUserUuid FrenchToEnglish
 
 
 userPracticingFrenchWithOnePhrase : Component.Model
@@ -432,21 +433,6 @@ userPracticingFrenchWithOnePhrase =
 oneUnsavedPhrase : Phrases.Phrase
 oneUnsavedPhrase =
     Unsaved { content = "préexistante", translation = "" }
-
-
-defaultUuid : Uuid
-defaultUuid =
-    case Uuid.fromString defaultUuidString of
-        Nothing ->
-            Debug.crash "Daaaaang. Uuids are not Uuids."
-
-        Just uuid ->
-            uuid
-
-
-defaultUuidString : String
-defaultUuidString =
-    "2a09efcb-514d-4ce2-a5db-8fc7edc984fb"
 
 
 jsonListOfPhrases : List ( String, String ) -> JE.Value

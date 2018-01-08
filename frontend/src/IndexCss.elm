@@ -22,6 +22,8 @@ type CssClasses
 type CssIds
     = LandingPage
     | Modes
+    | PracticeFrench
+    | PracticeEnglish
     | AddPhraseForm
     | PracticePhrases
     | AddWordLabel

@@ -10,6 +10,7 @@ module Scenarios.Shared.Spies
         , getUserUuidResponseSpy
         , taskSpy
         , practiceComponentSpy
+        , navigationNewUrlSpy
         )
 
 import Components.PracticePhrases as PracticePhrases
@@ -18,6 +19,7 @@ import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
 import Json.Decode as JD
 import Json.Encode as JE
+import Navigation
 import Task
 import Urls
 import Elmer.Platform.Command as Command
@@ -138,6 +140,18 @@ savedToLocalStorageSpy =
     Spy.create "savedToLocalStorageResponse" (\_ -> LocalStorage.setItemResponse)
         |> andCallFake
             (\tagger -> Subscription.fake "savedToLocalStorageEffect" tagger)
+
+
+
+{-
+   Spies for navigation
+-}
+
+
+navigationNewUrlSpy : Spy
+navigationNewUrlSpy =
+    Spy.create "newUrlSpy" (\_ -> Navigation.newUrl)
+        |> andCallFake (\_ -> Cmd.none)
 
 
 

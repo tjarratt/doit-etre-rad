@@ -39,14 +39,15 @@ For more information, checkout <https://github.com/tjarratt/doit-etre-rad>
 -}
 
 import Activities exposing (Activity(..))
+import Components.Leaderboard as Leaderboard
+import Components.PracticePhrases as PracticePhrases
 import Html exposing (Html)
 import Html.Attributes
 import Html.CssHelpers
 import Html.Events
 import IndexCss
+import Navigation
 import Ports.LocalStorage as LocalStorage
-import Components.Leaderboard as Leaderboard
-import Components.PracticePhrases as PracticePhrases
 import Uuid
 
 
@@ -54,6 +55,7 @@ import Uuid
 -}
 type Msg
     = Noop
+    | UrlChange Navigation.Location
     | ReceiveUserUuid String
     | NavigateToPracticeFrenchPhrases
     | NavigateToPracticeEnglishPhrases
@@ -103,8 +105,8 @@ view model =
         LandingPage ->
             Html.div [ id IndexCss.LandingPage ]
                 [ Html.h1 [] [ Html.text "I want to practice" ]
-                , activityButton "French words and phrases" "practiceFrench" NavigateToPracticeFrenchPhrases
-                , activityButton "English words and phrases" "practiceEnglish" NavigateToPracticeEnglishPhrases
+                , activityButton "French words and phrases" IndexCss.PracticeFrench NavigateToPracticeFrenchPhrases
+                , activityButton "English words and phrases" IndexCss.PracticeEnglish NavigateToPracticeEnglishPhrases
                 , landingPageButton
                 ]
 
@@ -115,12 +117,12 @@ view model =
             Html.map SetPracticePhrases <| PracticePhrases.view childModel
 
 
-activityButton : String -> String -> Msg -> Html Msg
-activityButton title idAttr msg =
+activityButton : String -> IndexCss.CssIds -> Msg -> Html Msg
+activityButton title elementId msg =
     Html.div [ id IndexCss.Modes ]
         [ Html.button
             [ Html.Events.onClick msg
-            , Html.Attributes.id idAttr
+            , id elementId
             , Html.Attributes.class "btn btn-default"
             ]
             [ Html.text title ]
@@ -165,6 +167,9 @@ update msg model =
         SetPracticePhrases phrasesMsg ->
             setPracticePhrases phrasesMsg model
 
+        UrlChange location ->
+            ( model, Cmd.none )
+
         Noop ->
             ( model, Cmd.none )
 
@@ -183,8 +188,24 @@ startActivity activity model =
                     PracticePhrases.defaultModel userUuid activity
             in
                 ( { model | currentPage = ViewActivity activity childModel }
-                , Cmd.map SetPracticePhrases <| PracticePhrases.loadComponent ()
+                , Cmd.batch
+                    [ Cmd.map SetPracticePhrases <| PracticePhrases.loadComponent ()
+                    , Navigation.newUrl <| urlForActivity activity
+                    ]
                 )
+
+
+urlForActivity : Activity -> String
+urlForActivity activity =
+    case activity of
+        FrenchToEnglish ->
+            "/practice/french"
+
+        EnglishToFrench ->
+            "/practice/english"
+
+        DifferentiateFrenchWords ->
+            Debug.crash "Should not have ever been possible to trigger this code"
 
 
 setPracticePhrases : PracticePhrases.Msg -> ApplicationState -> ( ApplicationState, Cmd Msg )
@@ -236,14 +257,14 @@ type alias Flags =
 
 {-| initialize the default model and kick off any initial commands
 -}
-init : Flags -> ( ApplicationState, Cmd Msg )
-init flags =
+init : Flags -> Navigation.Location -> ( ApplicationState, Cmd Msg )
+init flags location =
     ( defaultModel flags.seed, LocalStorage.getUserUuid () )
 
 
 main : Program Flags ApplicationState Msg
 main =
-    Html.programWithFlags
+    Navigation.programWithFlags UrlChange
         { init = init
         , update = update
         , view = view
