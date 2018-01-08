@@ -109,7 +109,7 @@ view model =
                 ]
 
         ViewLeaderboard ->
-            Leaderboard.view model.leaderboard SetLeaderboard
+            Html.map SetLeaderboard <| Leaderboard.view model.leaderboard
 
         ViewActivity activity childModel ->
             Html.map SetPracticePhrases <| PracticePhrases.view childModel

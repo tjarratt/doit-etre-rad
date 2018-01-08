@@ -118,8 +118,8 @@ interestingly enough, this needs to be generic over a given Msg type
 because we cannot anticipate all possible messages this will need to send
 in the component that presents us
 -}
-view : Model -> (Msg -> a) -> Html a
-view model wrapper =
+view : Model -> Html Msg
+view model =
     let
         innerView =
             case model.state of
@@ -127,11 +127,11 @@ view model wrapper =
                     leaderboardView items
 
                 Unauthenticated Nothing ->
-                    passwordFieldView wrapper
+                    passwordFieldView
 
                 Unauthenticated (Just errorMessage) ->
                     Html.div []
-                        [ passwordFieldView wrapper
+                        [ passwordFieldView
                         , errorMessageView errorMessage
                         ]
     in
@@ -141,31 +141,31 @@ view model wrapper =
             ]
 
 
-passwordFieldView : (Msg -> a) -> Html a
-passwordFieldView wrapper =
+passwordFieldView : Html Msg
+passwordFieldView =
     Html.form [ Html.Attributes.action "javascript:void(0)" ]
         [ Html.input
             [ id IndexCss.PasswordField
-            , Html.Events.onInput (\string -> wrapper <| TypePassword string)
+            , Html.Events.onInput TypePassword
             , Html.Attributes.placeholder "<secret password>"
             , Html.Attributes.class "form-control"
             ]
             []
         , Html.button
-            [ Html.Events.onClick <| wrapper RequestToBackend
+            [ Html.Events.onClick RequestToBackend
             , Html.Attributes.class "btn btn-primary"
             ]
             [ Html.text "Submit" ]
         ]
 
 
-errorMessageView : String -> Html a
+errorMessageView : String -> Html Msg
 errorMessageView string =
     Html.div [ id IndexCss.Errors ]
         [ Html.text string ]
 
 
-leaderboardView : List LeaderboardItem -> Html a
+leaderboardView : List LeaderboardItem -> Html Msg
 leaderboardView items =
     Html.ul
         [ id IndexCss.Leaderboard ]
@@ -173,7 +173,7 @@ leaderboardView items =
         List.map leaderboardItemView items
 
 
-leaderboardItemView : LeaderboardItem -> Html a
+leaderboardItemView : LeaderboardItem -> Html Msg
 leaderboardItemView item =
     Html.li
         []
