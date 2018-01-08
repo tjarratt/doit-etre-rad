@@ -3,3 +3,4 @@ logs
 
 # ide specific directories
 .idea
+.DS_Store
