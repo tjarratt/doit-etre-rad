@@ -33,6 +33,7 @@
   - https://www.supermemo.com/english/ol/nn_train.htm
 * single page app guidelines for csrf
   -> http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
+* "assume session" in leaderboard / admin section
 
 -----
 
