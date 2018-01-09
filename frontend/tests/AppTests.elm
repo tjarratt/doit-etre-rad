@@ -13,12 +13,13 @@ import Elmer.Html.Matchers exposing (element, elementExists, elements, hasText)
 import Elmer.Http
 import Elmer.Http.Matchers exposing (hasHeader)
 import Elmer.Http.Route
+import Elmer.Navigation as ElmerNav
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
 import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
 import Expect exposing (Expectation)
 import Scenarios.Shared exposing (defaultLocation, loggedInUser)
-import Scenarios.Shared.Spies exposing (adminErrorCaseSpies, adminSpies, getUserUuidSpy, navigationNewUrlSpy, practiceComponentSpy)
+import Scenarios.Shared.Spies exposing (adminErrorCaseSpies, adminSpies, getUserUuidSpy, practiceComponentSpy)
 import Test exposing (Test, describe, test)
 
 
@@ -39,11 +40,11 @@ landingPageTests =
                 \() ->
                     givenIAmPracticingFrench
                         |> Markup.target "div"
-                        |> Markup.expect (element <| hasText "Practicing French phrases")
+                        |> Markup.expect (element <| hasText "Practicing French")
             , test "changes the URL" <|
                 \() ->
                     givenIAmPracticingFrench
-                        |> expectUrlToBe "/practice/french"
+                        |> ElmerNav.expectLocation "/practice/french"
             , test "prompts the component to load itself" <|
                 \() ->
                     givenIAmPracticingFrench
@@ -54,11 +55,11 @@ landingPageTests =
                 \() ->
                     givenIAmPracticingEnglish
                         |> Markup.target "div"
-                        |> Markup.expect (element <| hasText "Practicing English phrases")
-            , test "changes the URL" <|
+                        |> Markup.expect (element <| hasText "Practicing English")
+            , test "it changes the URL" <|
                 \() ->
                     givenIAmPracticingEnglish
-                        |> expectUrlToBe "/practice/english"
+                        |> ElmerNav.expectLocation "/practice/english"
             , test "prompts the component to load itself" <|
                 \() ->
                     givenIAmPracticingEnglish
@@ -83,7 +84,15 @@ userUuidTests =
 leaderboardTests : Test
 leaderboardTests =
     describe "the admin portion of the site"
-        [ test "it displays a textfield" <|
+        [ test "has its own URL" <|
+            \() ->
+                Elmer.given loggedInUser App.view App.update
+                    |> Spy.use adminSpies
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Markup.target "#SecretButton button"
+                    |> Event.click
+                    |> ElmerNav.expectLocation "/leaderboard"
+        , test "it displays a textfield" <|
             \() ->
                 Elmer.given loggedInUser App.view App.update
                     |> Spy.use adminSpies
@@ -101,7 +110,7 @@ leaderboardTests =
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "super secret password"
-                    |> Markup.target "#AdminSection button"
+                    |> Markup.target "#AdminSection form button"
                     |> Event.click
                     |> Elmer.Http.expectThat
                         (Elmer.Http.Route.get "/api/admin")
@@ -115,7 +124,7 @@ leaderboardTests =
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "super secret password"
-                    |> Markup.target "#AdminSection button"
+                    |> Markup.target "#AdminSection form button"
                     |> Event.click
                     |> Markup.target "#AdminSection #Leaderboard"
                     |> Markup.expect
@@ -132,7 +141,7 @@ leaderboardTests =
                     |> Event.click
                     |> Markup.target "#AdminSection #PasswordField"
                     |> Event.input "whoops i accidentally all the things"
-                    |> Markup.target "#AdminSection button"
+                    |> Markup.target "#AdminSection form button"
                     |> Event.click
                     |> Markup.target "#AdminSection #Errors"
                     |> Markup.expect
@@ -143,7 +152,7 @@ leaderboardTests =
 givenIAmPracticingFrench : Elmer.TestState App.ApplicationState App.Msg
 givenIAmPracticingFrench =
     Elmer.given loggedInUser App.view App.update
-        |> Spy.use [ practiceComponentSpy, navigationNewUrlSpy ]
+        |> Spy.use [ practiceComponentSpy, ElmerNav.spy ]
         |> Markup.target "#Modes button"
         |> Event.click
 
@@ -151,7 +160,7 @@ givenIAmPracticingFrench =
 givenIAmPracticingEnglish : Elmer.TestState App.ApplicationState App.Msg
 givenIAmPracticingEnglish =
     Elmer.given loggedInUser App.view App.update
-        |> Spy.use [ practiceComponentSpy, navigationNewUrlSpy ]
+        |> Spy.use [ practiceComponentSpy, ElmerNav.spy ]
         |> Markup.target "#Modes #PracticeEnglish"
         |> Event.click
 

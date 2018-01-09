@@ -5,7 +5,6 @@
 **Icebox and sundry Tasks**
 ---------------------------
 * fix hella busted layout ?
-  - shh button slightly off-center
   - word cards (placement ?)
   - word translations (length ?)
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
@@ -34,6 +33,7 @@
   -> http://www.eq8.eu/blogs/44-csrf-protection-on-single-page-app-api
 * "assume session" in leaderboard / admin section
 * brew install mariadb (includes libreadline)
+* setup CI on travis
 
 -----
 

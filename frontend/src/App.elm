@@ -152,7 +152,7 @@ update msg model =
             startActivity EnglishToFrench model
 
         NavigateToLeaderboard ->
-            ( { model | currentPage = ViewLeaderboard }, Cmd.none )
+            ( { model | currentPage = ViewLeaderboard }, Navigation.newUrl "/leaderboard" )
 
         ReceiveUserUuid str ->
             let
@@ -161,16 +161,26 @@ update msg model =
             in
                 ( { model | userUuid = uuid }, Cmd.none )
 
+        UrlChange location ->
+            handleUrlChange model location
+
         SetLeaderboard leaderboardMsg ->
             setLeaderboard leaderboardMsg model
 
         SetPracticePhrases phrasesMsg ->
             setPracticePhrases phrasesMsg model
 
-        UrlChange location ->
+        Noop ->
             ( model, Cmd.none )
 
-        Noop ->
+
+handleUrlChange : ApplicationState -> Navigation.Location -> ( ApplicationState, Cmd Msg )
+handleUrlChange model location =
+    case location.pathname of
+        "/" ->
+            ( { model | currentPage = LandingPage }, Cmd.none )
+
+        _ ->
             ( model, Cmd.none )
 
 

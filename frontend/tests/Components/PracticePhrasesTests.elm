@@ -5,6 +5,7 @@ module PracticePhrasesTests
         , onlineTests
         , offlineTests
         , addingTranslationsTests
+        , navigationTests
         )
 
 import Activities exposing (Activity(..))
@@ -19,14 +20,13 @@ import Elmer.Http.Matchers exposing (hasBody, hasHeader, wasRequested)
 import Elmer.Http.Route
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Spy as Spy exposing (Spy, andCallFake)
-import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
+import Elmer.Spy.Matchers exposing (intArg, stringArg, wasCalled, wasCalledWith)
 import Json.Encode as JE
 import Scenarios exposing (addPhraseToPractice, addTranslation, addUnsavedTranslation, clickAddPhraseButton, clickPhrase, editPhrase, typePhrase)
 import Scenarios.French exposing (allFrenchOfflineSpies, allFrenchSpies)
 import Scenarios.Shared exposing (loggedInUserUuid, loggedInUserUuidString)
-import Scenarios.Shared.Spies exposing (getItemResponse)
+import Scenarios.Shared.Spies exposing (getItemResponse, navigationBackSpy)
 import Test exposing (Test, describe, test)
-import Uuid exposing (Uuid)
 
 
 addPhraseTests : Test
@@ -39,7 +39,7 @@ addPhraseTests =
                     |> Subscription.with (\() -> Component.subscriptions)
                     |> Markup.target "h1"
                     |> Markup.expect
-                        (element <| hasText "Practicing French phrases")
+                        (element <| hasText "Practicing French")
         , test "it has a textfield to add a phrase to the list" <|
             \() ->
                 Elmer.given userPracticingFrench Component.view Component.update
@@ -411,6 +411,19 @@ addingTranslationsTests =
                     |> Markup.target ".indexPhraseListItem .indexAddTranslationButton"
                     |> Event.click
                     |> Spy.expect "saveFrenchPhrases" (wasCalled 0)
+        ]
+
+
+navigationTests : Test
+navigationTests =
+    describe "the back button"
+        [ test "allows the user to return to the landing page" <|
+            \() ->
+                Elmer.given userPracticingFrenchWithOnePhrase Component.view Component.update
+                    |> Spy.use [ navigationBackSpy ]
+                    |> Markup.target "button#back"
+                    |> Event.click
+                    |> Spy.expect "Navigation.back" (wasCalledWith [ intArg 1 ])
         ]
 
 

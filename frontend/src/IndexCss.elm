@@ -17,13 +17,16 @@ type CssClasses
     | AddTranslationButton
     | CancelTranslationButton
     | LeaderboardItem
+    | CenterMe
 
 
 type CssIds
     = LandingPage
+    | Header
     | Modes
     | PracticeFrench
     | PracticeEnglish
+    | Back
     | AddPhraseForm
     | PracticePhrases
     | AddWordLabel
@@ -41,6 +44,8 @@ css : Css.Stylesheet
 css =
     (stylesheet << namespace "index")
         [ id LandingPage
+            [ textAlign center ]
+        , id Header
             [ textAlign center ]
         , id Modes
             [ marginBottom (px 10) ]
@@ -68,6 +73,8 @@ css =
             [ listStyleType none
             , padding (px 0)
             ]
+        , class CenterMe
+            [ textAlign center ]
         , class OfflineIndicator
             [ marginLeft (px 10) ]
         , class PhraseListItem

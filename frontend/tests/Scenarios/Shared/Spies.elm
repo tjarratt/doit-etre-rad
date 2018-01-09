@@ -10,7 +10,7 @@ module Scenarios.Shared.Spies
         , getUserUuidResponseSpy
         , taskSpy
         , practiceComponentSpy
-        , navigationNewUrlSpy
+        , navigationBackSpy
         )
 
 import Components.PracticePhrases as PracticePhrases
@@ -22,6 +22,7 @@ import Json.Encode as JE
 import Navigation
 import Task
 import Urls
+import Elmer.Navigation as ElmerNav
 import Elmer.Platform.Command as Command
 import Elmer.Platform.Subscription as Subscription
 import Elmer.Http
@@ -71,6 +72,7 @@ adminSpies =
         [ Elmer.Http.Stub.for (Elmer.Http.Route.get Urls.adminApiUrl)
             |> Elmer.Http.Stub.withBody """[{"userUuid": "the-uuid", "phraseCount": 11}]"""
         ]
+    , ElmerNav.spy
     ]
 
 
@@ -81,6 +83,7 @@ adminErrorCaseSpies =
             |> Elmer.Http.Stub.withBody """{"error": "Ah ah ah you didn't say the magic word !"}"""
             |> Elmer.Http.Stub.withStatus unauthorized
         ]
+    , ElmerNav.spy
     ]
 
 
@@ -148,9 +151,9 @@ savedToLocalStorageSpy =
 -}
 
 
-navigationNewUrlSpy : Spy
-navigationNewUrlSpy =
-    Spy.create "newUrlSpy" (\_ -> Navigation.newUrl)
+navigationBackSpy : Spy
+navigationBackSpy =
+    Spy.create "Navigation.back" (\_ -> Navigation.back)
         |> andCallFake (\_ -> Cmd.none)
 
 

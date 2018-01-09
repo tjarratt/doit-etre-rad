@@ -22,6 +22,7 @@ import Http
 import IndexCss
 import Json.Decode as JD
 import Json.Encode as JE
+import Navigation
 import Phrases exposing (Phrase)
 import Ports.Bootstrap as Bootstrap
 import Ports.LocalStorage as LocalStorage
@@ -33,6 +34,7 @@ import Uuid exposing (Uuid)
 type Msg
     = Noop
     | ComponentDidLoad
+    | NavigateBack
     | TypeTranslationUpdate String
     | StartEditingTranslation PhraseViewModel
     | AddTranslationToPhrase PhraseViewModel
@@ -104,6 +106,9 @@ update msg model =
     case msg of
         Noop ->
             ( model, Cmd.none )
+
+        NavigateBack ->
+            ( model, Navigation.back 1 )
 
         ComponentDidLoad ->
             fetchPhrasesFromLocalStorageAndRenderTooltips model
@@ -551,25 +556,31 @@ view model =
 
 activityView : Activity -> Model -> Html Msg
 activityView activity model =
-    Html.div []
-        [ Html.h1 [ id IndexCss.PracticePhrases ] [ Html.text <| headerForActivity activity ]
+    Html.div [ id IndexCss.PracticePhrases ]
+        [ headerForActivity activity
+        , Html.button [ id IndexCss.Back, Html.Events.onClick NavigateBack, Html.Attributes.class "btn btn-link" ] [ Html.text "↩ Back" ]
         , AddPhrase.view model.addPhrase SetAddPhrase
         , errorView model.errorSyncing model.phrases
         , phraseListView model
         ]
 
 
-headerForActivity : Activity -> String
+headerForActivity : Activity -> Html Msg
 headerForActivity activity =
-    case activity of
-        FrenchToEnglish ->
-            "Practicing French phrases"
+    let
+        text =
+            case activity of
+                FrenchToEnglish ->
+                    "Practicing French"
 
-        EnglishToFrench ->
-            "Practicing English phrases"
+                EnglishToFrench ->
+                    "Practicing English"
 
-        _ ->
-            Debug.crash "whoops"
+                _ ->
+                    Debug.crash "whoops"
+    in
+        Html.div [ id IndexCss.Header ]
+            [ Html.h1 [] [ Html.text text ] ]
 
 
 errorView : Bool -> List PhraseViewModel -> Html Msg

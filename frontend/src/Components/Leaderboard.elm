@@ -24,6 +24,7 @@ import IndexCss
 import Html
 import Html.Attributes
 import Http
+import Navigation
 import Components.Leaderboard.JSON exposing (LeaderboardItem, decoder, errorDecoder)
 import Urls exposing (adminApiUrl)
 
@@ -32,6 +33,7 @@ import Urls exposing (adminApiUrl)
 -}
 type Msg
     = Noop
+    | NavigateBack
     | TypePassword String
     | RequestToBackend
     | ReceiveFromBackend (Result Http.Error (List LeaderboardItem))
@@ -66,6 +68,9 @@ update msg model =
     case msg of
         Noop ->
             ( model, Cmd.none )
+
+        NavigateBack ->
+            ( model, Navigation.back 1 )
 
         TypePassword password ->
             ( { model | typedPassword = password }, Cmd.none )
@@ -135,9 +140,10 @@ view model =
                         , errorMessageView errorMessage
                         ]
     in
-        Html.div
-            [ id IndexCss.AdminSection ]
-            [ innerView
+        Html.div []
+            [ Html.div [ class [ IndexCss.CenterMe ] ] [ Html.h1 [] [ Html.text "Should you really be here ?" ] ]
+            , Html.button [ id IndexCss.Back, Html.Events.onClick NavigateBack, Html.Attributes.class "btn btn-link" ] [ Html.text "↩ Back" ]
+            , Html.div [ id IndexCss.AdminSection ] [ innerView ]
             ]
 
 
