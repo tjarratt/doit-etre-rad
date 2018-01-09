@@ -4,6 +4,8 @@
 ---------------------------
 **Icebox and sundry Tasks**
 ---------------------------
+* fix 404s on CF
+  - you will want to look at https://gist.github.com/tjarratt/327fc3a80e7512a38d955ff2a76858e9
 * fix hella busted layout ?
   - word cards (placement ?)
   - word translations (length ?)
