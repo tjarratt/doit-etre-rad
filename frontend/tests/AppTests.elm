@@ -15,7 +15,7 @@ import Elmer.Http.Matchers exposing (hasHeader)
 import Elmer.Http.Route
 import Elmer.Navigation as ElmerNav
 import Elmer.Platform.Subscription as Subscription
-import Elmer.Spy as Spy exposing (Spy, andCallFake)
+import Elmer.Spy as Spy exposing (Spy)
 import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
 import Expect exposing (Expectation)
 import Scenarios.Shared exposing (defaultLocation, loggedInUser)
@@ -163,8 +163,3 @@ givenIAmPracticingEnglish =
         |> Spy.use [ practiceComponentSpy, ElmerNav.spy ]
         |> Markup.target "#Modes #PracticeEnglish"
         |> Event.click
-
-
-expectUrlToBe : String -> Elmer.TestState App.ApplicationState App.Msg -> Expectation
-expectUrlToBe url =
-    Spy.expect "newUrlSpy" (wasCalledWith [ stringArg url ])
