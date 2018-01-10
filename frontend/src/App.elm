@@ -184,6 +184,16 @@ handleUrlChange model location =
             ( model, Cmd.none )
 
 
+handleInitialUrl : ApplicationState -> Navigation.Location -> ( ApplicationState, Cmd Msg )
+handleInitialUrl model location =
+    case location.pathname of
+        "/" ->
+            ( { model | currentPage = LandingPage }, LocalStorage.getUserUuid () )
+
+        _ ->
+            model ! [ Navigation.modifyUrl "/", LocalStorage.getUserUuid () ]
+
+
 {-| Moves app into the state of presenting a page for this activity
 -}
 startActivity : Activity -> ApplicationState -> ( ApplicationState, Cmd Msg )
@@ -269,7 +279,7 @@ type alias Flags =
 -}
 init : Flags -> Navigation.Location -> ( ApplicationState, Cmd Msg )
 init flags location =
-    ( defaultModel flags.seed, LocalStorage.getUserUuid () )
+    defaultModel flags.seed |> flip handleInitialUrl location
 
 
 main : Program Flags ApplicationState Msg

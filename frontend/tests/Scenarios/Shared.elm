@@ -2,6 +2,7 @@ module Scenarios.Shared
     exposing
         ( loggedInUser
         , defaultLocation
+        , leaderboardLocation
         , loggedInUserUuid
         , loggedInUserUuidString
         )
@@ -44,6 +45,22 @@ defaultLocation =
     , origin = ""
     , port_ = ""
     , pathname = ""
+    , search = ""
+    , hash = ""
+    , username = ""
+    , password = ""
+    }
+
+
+leaderboardLocation : Navigation.Location
+leaderboardLocation =
+    { href = ""
+    , host = ""
+    , hostname = ""
+    , protocol = ""
+    , origin = ""
+    , port_ = ""
+    , pathname = "/leaderboard"
     , search = ""
     , hash = ""
     , username = ""

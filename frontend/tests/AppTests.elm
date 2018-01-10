@@ -2,7 +2,7 @@ module AppTests
     exposing
         ( landingPageTests
         , leaderboardTests
-        , userUuidTests
+        , appInitTests
         )
 
 import App
@@ -18,7 +18,7 @@ import Elmer.Platform.Subscription as Subscription
 import Elmer.Spy as Spy exposing (Spy)
 import Elmer.Spy.Matchers exposing (stringArg, wasCalled, wasCalledWith)
 import Expect exposing (Expectation)
-import Scenarios.Shared exposing (defaultLocation, loggedInUser)
+import Scenarios.Shared exposing (defaultLocation, leaderboardLocation, loggedInUser)
 import Scenarios.Shared.Spies exposing (adminErrorCaseSpies, adminSpies, getUserUuidSpy, practiceComponentSpy)
 import Test exposing (Test, describe, test)
 
@@ -68,16 +68,23 @@ landingPageTests =
         ]
 
 
-userUuidTests : Test
-userUuidTests =
-    describe "a unique uuid for the user"
-        [ test "will be requested when the app starts" <|
+appInitTests : Test
+appInitTests =
+    describe "when the app initializes"
+        [ test "a unique uuid for the user will be requested" <|
             \() ->
                 Elmer.given loggedInUser App.view App.update
-                    |> Spy.use [ getUserUuidSpy ]
+                    |> Spy.use [ getUserUuidSpy, ElmerNav.spy ]
                     |> Subscription.with (\() -> App.subscriptions)
                     |> Elmer.init (\_ -> App.init { seed = 0 } defaultLocation)
                     |> Spy.expect "getUserUuid" (wasCalled 1)
+        , test "the url will be changed (if it is not /)" <|
+            \() ->
+                Elmer.given loggedInUser App.view App.update
+                    |> Spy.use [ getUserUuidSpy, ElmerNav.spy ]
+                    |> Subscription.with (\() -> App.subscriptions)
+                    |> Elmer.init (\_ -> App.init { seed = 0 } leaderboardLocation)
+                    |> ElmerNav.expectLocation "/"
         ]
 
 
