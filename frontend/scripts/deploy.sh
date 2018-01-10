@@ -10,6 +10,7 @@ rm -rf tmp/*
 mkdir -p tmp/app/assets
 cp -r Staticfile nginx tmp
 cp index.html tmp/app
+cp nginx/conf/nginx.conf tmp/app
 
 # move all of our assets into the deploy directory
 cp assets/* assets/*.css tmp/app/assets/
