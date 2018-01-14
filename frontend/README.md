@@ -4,11 +4,6 @@
 ---------------------------
 **Icebox and sundry Tasks**
 ---------------------------
-* fix 404s on CF
-  - you will want to look at https://gist.github.com/tjarratt/327fc3a80e7512a38d955ff2a76858e9
-* fix hella busted layout ?
-  - word cards (placement ?)
-  - word translations (length ?)
 * rebuild source on save https://maximilianhoffmann.com/posts/how-to-compile-elm-files-on-save
   - https://github.com/elm-lang/core/blob/4.0.3/src/Platform/Cmd.elm#L64-L66
 * think about authentication
@@ -21,6 +16,8 @@
 * after saving from backend, local storage is out of date
   -> most recent phrase is still "unsaved" :-\
   -> yes, yes, yes, but ... IS THIS A PROBLEM ?
+* find a solution to vertical alignment of cards
+  - basically impossible to do given that we're using absolute positioning
 * focus input when navigating between apps on iOS
   -> ("pageshow" event, see "safariwebcontent" docs on handling events)
 * user can delete items from list

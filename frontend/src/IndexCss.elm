@@ -89,7 +89,7 @@ css =
             []
         , class CardContainer
             [ transform (perspective 1000)
-            , width (px 300)
+            , width inherit
             , height (px 100)
             ]
         , class CardFlipper
@@ -104,7 +104,7 @@ css =
             , property "backface-visibility" "hidden"
             , top (px 0)
             , left (px 0)
-            , width (px 300)
+            , right (px 0)
             , height (px 100)
 
             -- applies only to front
@@ -116,7 +116,7 @@ css =
             , property "backface-visibility" "hidden"
             , top (px 0)
             , left (px 0)
-            , width (px 300)
+            , right (px 0)
             , height (px 100)
 
             -- applies only to back
