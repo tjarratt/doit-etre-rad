@@ -106,6 +106,7 @@ css =
             , left (px 0)
             , right (px 0)
             , height (px 100)
+            , marginTop (px 25)
 
             -- applies only to front
             , property "z-index" "2"
@@ -118,6 +119,7 @@ css =
             , left (px 0)
             , right (px 0)
             , height (px 100)
+            , marginTop (px 25)
 
             -- applies only to back
             , property "transform" "rotateY(180deg)"
